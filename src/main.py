@@ -1,6 +1,4 @@
-from impl.hash.hash import hash_sha_1
-
-
+from impl.hash.hash import hashSHA1
 
 if __name__ == '__main__':
-    print(hash_sha_1("Test123 Filip Mladen"))
+    print(hashSHA1("Test123 Filip Mladen"))
