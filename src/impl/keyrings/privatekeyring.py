@@ -1,17 +1,12 @@
 import binascii
 import time
-import rsa
-from src.impl.hash.hash import  hashMD5
+import struct
 from Crypto.Cipher import DES3
+from src.impl.hash.hash import  hashMD5
 from Crypto.Util.Padding import pad, unpad
-from Crypto.Random import get_random_bytes
-from pickle import dumps, loads
-from pympler import asizeof
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-import codecs
-
-import os
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import rsa, dsa
+from src.impl.asymmetric.asymmetric import elGamalGenerateKeys, elGamalKeyToBytes, elGamalBytesToKey
 
 BLOCK_SIZE = 64
 
@@ -59,9 +54,11 @@ class PrivateKeyring:
         key = self.privateKeyringSigning[keyID]
         pass
 
+
     #Kako da se importuje privatni kljuc, da li saljemo i keyID kada ga exportujemo?
     def importKeyForSigning(self, key):
         pass
+
 
     def generateKeys(self, name, email, algo, sizeOfKeys, password):
         hashedPassword = hashMD5(password)
@@ -73,22 +70,26 @@ class PrivateKeyring:
             publicKeySigning = privateKeySigning.public_key()
         else:
             #generisanje DSA i ElGamal
-            privateKeySigning = 0 #only for testing for now
-            publicKeySigning = 0
-            privateKeyEncryption = 0
-            publicKeyEncryption = 0
-
+            p, g, x ,y = elGamalGenerateKeys(sizeOfKeys)
+            privateKeyEncryption = (p, x)
+            publicKeyEncryption = (p, g, y)
+            privateKeySigning = dsa.generate_private_key(sizeOfKeys)
+            publicKeySigning = privateKeySigning.public_key()
 
         #Initialize TripleDES Algorythm
-        key = DES3.adjust_key_parity(hashedPassword)
         cipher = DES3.new(hashedPassword,DES3.MODE_ECB)
 
 
-        #Transform Private Keys To Binary
-        privateKeyEncryptionBinary = privateKeyEncryption.private_bytes(
-            encoding=serialization.Encoding.DER,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption())
+        # Transform Private Keys To Binary
+        if not isinstance(privateKeyEncryption,tuple):
+
+            privateKeyEncryptionBinary = privateKeyEncryption.private_bytes(
+                encoding=serialization.Encoding.DER,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption())
+        else:
+            privateKeyEncryptionBinary = elGamalKeyToBytes(privateKeyEncryption)
+
 
         privateKeySigningBinary = privateKeySigning.private_bytes(
             encoding=serialization.Encoding.DER,
@@ -106,17 +107,20 @@ class PrivateKeyring:
 
         #Generate KeyID for Public Keys
 
+
         #Transform Public Keys to Binary
-        publicKeyEncryptionBinary = publicKeyEncryption.public_bytes(
-            encoding=serialization.Encoding.DER,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
+        if not isinstance(publicKeyEncryption, tuple):
+            publicKeyEncryptionBinary = publicKeyEncryption.public_bytes(
+                encoding=serialization.Encoding.DER,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+        else:
+            publicKeyEncryptionBinary = elGamalKeyToBytes(publicKeyEncryption)
 
         publicKeySigningBinary = publicKeySigning.public_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
-
 
         #Get IDs from Binary Public Keys
         publicKeyEncryptionID = int(binascii.hexlify(publicKeyEncryptionBinary), 16) & ((1 << 64) - 1)
@@ -149,24 +153,27 @@ class PrivateKeyring:
         # #Decrypting - not needed - just to test
 
         # test = serialization.load_der_private_key(privateKeyEncryptionBinary, None)
+        #
+        # decrypt = cipher.decrypt(encryptedKeyEncryption)
+        # decryptBytes = unpad(decrypt, BLOCK_SIZE)
 
-        # decrypt = cipher.decrypt(encryptedKeySigning)
-        # binary = unpad(decrypt, BLOCK_SIZE)
+        # print(elGamalBytesToKey(decryptBytes))
 
+        # print(len(binary))
         # decrypted = cipher.decrypt(encryptedKeySigning)
         # privateKeySigningUnPadded = unpad(decrypted, BLOCK_SIZE)
         # privateKeySigningDecrypted = loads(privateKeySigningUnPadded)
 
 if __name__ == '__main__':
     pk = PrivateKeyring()
-    pk.generateKeys("Mladen", "mladen@gmail.com", "RSA", 2048, "FilipMladen123")
+    pk.generateKeys("Mladen", "mladen@gmail.com", "RSA11", 2048, "FilipMladen123")
 
     #Get Key
     key = list(pk.privateKeyringSigning)
     privateKey = pk.getKeyForSigning(key[0])
 
-    #Print UserID
-    print(privateKey.userID)
-    privateKey.printValues()
+    # #Print UserID
+    # print(privateKey.userID)
+    # privateKey.printValues()
 
 
