@@ -1,9 +1,15 @@
 import time
 import rsa
-from src.impl.hash.hash import hashSHA1
+from src.impl.hash.hash import hashSHA1, hashMD5
 from Crypto.Cipher import DES3
+from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
-from pickle import dumps
+from pickle import dumps, loads
+from pympler import asizeof
+
+import os
+
+BLOCK_SIZE = 32
 
 class PrivateKeyringValues:
     def __init__(self, keyID, publicKey, ecp, userID, usedAlgorithm, length):
@@ -47,7 +53,7 @@ class PrivateKeyring:
         pass
 
     def generateKeys(self, name, email, algo, sizeOfKeys, password):
-        hashedPassword = hashSHA1(password)
+        hashedPassword = hashMD5(password)
         userID = name + ": " + email
         if algo == "RSA":
             publicKeySigning, privateKeySigning = rsa.newkeys(sizeOfKeys)
@@ -55,11 +61,31 @@ class PrivateKeyring:
         else:
             #generisanje DSA i ElGamal
             privateKeySigning = 0 #only for testing for now
+            publicKeySigning = 0
+            privateKeyEncryption = 0
+            publicKeyEncryption = 0
+
+        #Initialize TripleDES Algorythm
+        key = DES3.adjust_key_parity(hashedPassword)
+        cipher = DES3.new(hashedPassword,DES3.MODE_ECB)
+
 
         #Encrypting Private keys
-        cipher = DES3.new(hashedPassword,DES3.MODE_ECB)
-        encryptedKeySigning = cipher.encrypt(dumps(privateKeySigning))
-        print(encryptedKeySigning)
+        privateKeySigningPadded = pad(dumps(privateKeySigning), BLOCK_SIZE)
+        encryptedKeySigning = cipher.encrypt(privateKeySigningPadded)
+
+        privateKeyEncryptionPadded = pad(dumps(privateKeyEncryption), BLOCK_SIZE)
+        encryptedKeyEncryption = cipher.encrypt(privateKeyEncryptionPadded)
+
+        #Creating KeyIDs
+        print(publicKeySigning)
+        print(publicKeyEncryption)
+
+
+        # #Decrypting - not needed - just tested
+        # decrypted = cipher.decrypt(encryptedKeySigning)
+        # privateKeySigningUnPadded = unpad(decrypted, BLOCK_SIZE)
+        # privateKeySigningDecrypted = loads(privateKeySigningUnPadded)
 
 
 if __name__ == '__main__':
