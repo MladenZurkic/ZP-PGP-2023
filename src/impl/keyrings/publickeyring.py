@@ -6,6 +6,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
 from tabulate import tabulate
 
+PEM_FOLDER = '../../../../pem_files/'
+
 
 class PublicKeyringValues:
     def __init__(self, keyID, publicKey, userID, usedAlgorithm):
@@ -52,8 +54,18 @@ class PublicKeyring:
             return None
 
     # Used to export key to .pem file
-    def exportKey(self):
-        pass
+    def exportKey(self, keyID):
+        keyToExport: PublicKeyringValues = self.getKey(keyID)
+        if keyToExport:
+            publicKeyInPEM = keyToExport.publicKey.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            ).decode('utf-8')
+
+            outputData = keyToExport.userID + "~" + keyToExport.usedAlgorithm + "~" + publicKeyInPEM
+            filename = f'{PEM_FOLDER}{keyToExport.keyID}.pem'
+            with open(filename, 'w') as file:
+                file.write(outputData)
 
     # Used to import key from .pem file
     # TEST NEEDED AFTER IMPLEMENTATION OF exportKey
@@ -61,9 +73,8 @@ class PublicKeyring:
         with open(filename, 'r') as file:
             dat = file.read()
             userId = dat.split('~')[0]
-            mail = dat.split('~')[1]  # Don't know about this...
-            usedAlgorithm = dat.split('~')[2]
-            publicKey = load_pem_public_key(dat.split('~')[3].encode('utf-8'))
+            usedAlgorithm = dat.split('~')[1]
+            publicKey = load_pem_public_key(dat.split('~')[2].encode('utf-8'))
             keyID = self.getKeyID(publicKey)
 
             newPublicKey = PublicKeyringValues(
@@ -73,7 +84,10 @@ class PublicKeyring:
                 usedAlgorithm=usedAlgorithm
             )
 
-            self.publicKeyring[keyID] = newPublicKey
+            if keyID in self.publicKeyring.keys():
+                print('Ovaj kljuc vec postoji...')
+            else:
+                self.publicKeyring[keyID] = newPublicKey
 
     # Remove key from keyring
     def removeKey(self, keyID):
@@ -85,10 +99,14 @@ class PublicKeyring:
     # Helper function used to print public keyring
     def printKeyring(self):
         for key in self.publicKeyring.keys():
+            keyPrint = int(binascii.hexlify(self.publicKeyring[key].publicKey.public_bytes(
+                encoding=serialization.Encoding.DER,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )), 16)
             curr = [[
                 self.publicKeyring[key].timestamp,
                 self.publicKeyring[key].keyID,
-                self.publicKeyring[key].publicKey,
+                keyPrint,
                 self.publicKeyring[key].userID,
                 self.publicKeyring[key].usedAlgorithm
             ]]
@@ -102,3 +120,7 @@ if __name__ == '__main__':
     pk.insertKey(publicKey=key, userID='abcd', usedAlgorithm='RSA')
     pk.printKeyring()
     pk.getKey(132465)  # Should report error
+
+    pk.exportKey(pk.getKeyID(key))
+    pk.importKey(f'{PEM_FOLDER}{pk.getKeyID(key)}.pem')
+

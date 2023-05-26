@@ -2,13 +2,17 @@ import binascii
 import time
 import struct
 from Crypto.Cipher import DES3
+from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
+
 from src.impl.hash.hash import  hashMD5
 from Crypto.Util.Padding import pad, unpad
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, dsa
 from src.impl.asymmetric.asymmetric import elGamalGenerateKeys, elGamalKeyToBytes, elGamalBytesToKey
+from src.impl.keyrings.publickeyring import PublicKeyring
 
 BLOCK_SIZE = 64
+PEM_FOLDER = '../../../../pem_files/'
 
 class PrivateKeyringValues:
     def __init__(self, keyID, publicKey, ecp, userID, usedAlgorithm, length):
@@ -42,7 +46,7 @@ class PrivateKeyring:
             print("Nije pronadjen kljuc (Signing): " + str(err.args[0]))
             return None
 
-    def geyKeyForEncryption(self,keyID):
+    def getKeyForEncryption(self, keyID):
         try:
             return self.privateKeyringEncryption[keyID]
         except KeyError as err:
@@ -50,14 +54,74 @@ class PrivateKeyring:
             return None
 
 
-    def exportKeyForSigning(self, keyID):
-        key = self.privateKeyringSigning[keyID]
-        pass
+    def exportKey(self, keyID, usage):
+        if usage == 'singing' or usage == 's':
+            keyToExport: PrivateKeyringValues = self.getKeyForSigning(keyID)
+        elif usage == 'encryption' or usage == 'e':
+            keyToExport: PrivateKeyringValues = self.getKeyForEncryption(keyID)
+        else:
+            print('Navedena neadekvatna upotreba prilikom izvoza!')
+            return None
+
+        if keyToExport:
+            publicKeyInPEM = keyToExport.publicKey.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            ).decode('utf-8')
+
+            outputDataPU = keyToExport.userID + "~" + keyToExport.usedAlgorithm + "~" + publicKeyInPEM
+            filenamePU = f'{PEM_FOLDER}PU_{keyToExport.keyID}.pem'
+            with open(filenamePU, 'w') as file:
+                file.write(outputDataPU)
+
+            privateKeyInPEM = keyToExport.encryptedPrivateKey.public_bytes(
+                encoding=serialization.Encoding.DER,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption()
+            ).decode('utf-8')
+
+            outputDataPR = keyToExport.userID + "~" + keyToExport.usedAlgorithm + "~" + keyToExport.length + "~" + privateKeyInPEM
+            filenamePR = f'{PEM_FOLDER}PR_{keyToExport.keyID}.pem'
+            with open(filenamePR, 'w') as file:
+                file.write(outputDataPR)
 
 
-    #Kako da se importuje privatni kljuc, da li saljemo i keyID kada ga exportujemo?
-    def importKeyForSigning(self, key):
-        pass
+
+    def importKey(self, filename_pu, filename_pr, usage):
+        # Load public part of the key
+        with open(filename_pu, 'r') as file_pu:
+            data = file_pu.read()
+            userId = data.split('~')[0]
+            usedAlgorithm = data.split('~')[0]
+            publicKey = load_pem_public_key(data.split('~')[2].encode('utf-8'))
+            keyID = PublicKeyring.getKeyID(publicKey=publicKey)
+
+        with open(filename_pr, 'r') as file_pr:
+            data = file_pr.read()
+            length = data.split('~')[2]
+            encPrivateKey = load_pem_private_key(data.split('~')[3].encode('utf-8'))
+
+        newPrivateKey = PrivateKeyringValues(
+            keyID=keyID,
+            publicKey=publicKey,
+            usedAlgorithm=usedAlgorithm,
+            userID=userId,
+            ecp=encPrivateKey,
+            length=length
+        )
+
+        if keyID in self.privateKeyringSigning.keys():
+            print('Ovaj kljuc vec postoji u prstenu za potpisivanje...')
+        elif keyID in self.privateKeyringEncryption.keys():
+            print('Ovaj kljuc vec postoji u prstenu za sifrovanje...')
+        else:
+            if usage == 'singing' or usage == 's':
+                self.privateKeyringSigning[keyID] = newPrivateKey
+            elif usage == 'encryption' or usage == 'e':
+                self.privateKeyringEncryption[keyID] = newPrivateKey
+            else:
+                print('Navedena neadekvatna upotreba prilikom izvoza!')
+                return None
 
 
     def generateKeys(self, name, email, algo, sizeOfKeys, password):
@@ -164,6 +228,7 @@ class PrivateKeyring:
         # privateKeySigningUnPadded = unpad(decrypted, BLOCK_SIZE)
         # privateKeySigningDecrypted = loads(privateKeySigningUnPadded)
 
+
 if __name__ == '__main__':
     pk = PrivateKeyring()
     pk.generateKeys("Mladen", "mladen@gmail.com", "RSA11", 2048, "FilipMladen123")
@@ -175,5 +240,7 @@ if __name__ == '__main__':
     # #Print UserID
     # print(privateKey.userID)
     # privateKey.printValues()
+
+    # NEED TO TEST IMPORT AND EXPORT
 
 
