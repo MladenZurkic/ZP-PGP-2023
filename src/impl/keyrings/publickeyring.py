@@ -51,7 +51,7 @@ class PublicKeyring:
             return self.publicKeyring[keyID]
         except KeyError as err:
             print('Unos u tabeli s vrednoscu ' + str(err.args[0]) + ' ne postoji...')
-            return 1, None
+            return None
 
     # Used to export key to .pem file
     def exportKey(self, keyID):
@@ -121,10 +121,10 @@ if __name__ == '__main__':
     pk.insertKey(publicKey=key, userID='abcd', usedAlgorithm='RSA')
     pk.printKeyring()
 
-    assert pk.getKey(132465)[0] == 1
+    assert pk.getKey(132465) is None
 
     pk.exportKey(pk.getKeyID(key))
-    assert pk.importKey(f'{PEM_FOLDER}{pk.getKeyID(key)}.pem')  == 1
+    assert pk.importKey(f'{PEM_FOLDER}{pk.getKeyID(key)}.pem') == 1
 
     # Test importing of new key
     key1 = rsa.generate_private_key(65537, 512).public_key()
