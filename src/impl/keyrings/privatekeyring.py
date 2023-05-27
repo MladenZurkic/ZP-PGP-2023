@@ -75,7 +75,7 @@ class PrivateKeyring:
                 file.write(outputDataPU)
 
             privateKeyInPEM = keyToExport.encryptedPrivateKey.public_bytes(
-                encoding=serialization.Encoding.DER,
+                encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.PKCS8,
                 encryption_algorithm=serialization.NoEncryption()
             ).decode('utf-8')
@@ -86,15 +86,23 @@ class PrivateKeyring:
                 file.write(outputDataPR)
 
 
+    def getKeyID(self, publicKey):
+        newKeyIDbin = publicKey.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+        return int(binascii.hexlify(newKeyIDbin), 16) & ((1 << 64) - 1)
+
 
     def importKey(self, filename_pu, filename_pr, usage):
         # Load public part of the key
         with open(filename_pu, 'r') as file_pu:
             data = file_pu.read()
             userId = data.split('~')[0]
-            usedAlgorithm = data.split('~')[0]
+            usedAlgorithm = data.split('~')[1]
             publicKey = load_pem_public_key(data.split('~')[2].encode('utf-8'))
-            keyID = PublicKeyring.getKeyID(publicKey=publicKey)
+            keyID = self.getKeyID(publicKey=publicKey)
 
         with open(filename_pr, 'r') as file_pr:
             data = file_pr.read()

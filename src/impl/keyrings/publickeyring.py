@@ -77,16 +77,15 @@ class PublicKeyring:
             publicKey = load_pem_public_key(dat.split('~')[2].encode('utf-8'))
             keyID = self.getKeyID(publicKey)
 
-            newPublicKey = PublicKeyringValues(
-                keyID=keyID,
-                publicKey=publicKey,
-                userID=userId,
-                usedAlgorithm=usedAlgorithm
-            )
-
             if keyID in self.publicKeyring.keys():
                 print('Ovaj kljuc vec postoji...')
             else:
+                newPublicKey = PublicKeyringValues(
+                    keyID=keyID,
+                    publicKey=publicKey,
+                    userID=userId,
+                    usedAlgorithm=usedAlgorithm
+                )
                 self.publicKeyring[keyID] = newPublicKey
 
     # Remove key from keyring
