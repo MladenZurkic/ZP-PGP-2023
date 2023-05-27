@@ -228,6 +228,17 @@ class PrivateKeyring:
         # privateKeySigningUnPadded = unpad(decrypted, BLOCK_SIZE)
         # privateKeySigningDecrypted = loads(privateKeySigningUnPadded)
 
+    # Removes key from PrivateKeyring
+    def removeKey(self, keyID):
+        if keyID not in self.privateKeyringEncryption.keys() or self.privateKeyringSigning.keys():
+            print('Nije moguce obrisati privatni kljuc s vrednoscu ' + keyID)
+        else:
+            if keyID in self.privateKeyringEncryption.keys():
+                del self.privateKeyringEncryption[keyID]
+            if keyID in self.privateKeyringSigning.keys():
+                del self.privateKeyringSigning
+
+
 
 if __name__ == '__main__':
     pk = PrivateKeyring()
