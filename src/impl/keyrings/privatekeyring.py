@@ -4,11 +4,11 @@ import struct
 from Crypto.Cipher import DES3
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
 
+from src.impl.asymmetric.elGamal import elGamalGenerateKeys, elGamalKeyToBytes, elGamalBytesToKey
 from src.impl.hash.hash import  hashMD5
 from Crypto.Util.Padding import pad, unpad
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, dsa
-from src.impl.asymmetric.asymmetric import elGamalGenerateKeys, elGamalKeyToBytes, elGamalBytesToKey
 from src.impl.keyrings.publickeyring import PublicKeyring
 
 BLOCK_SIZE = 64
@@ -39,6 +39,7 @@ class PrivateKeyring:
         self.privateKeyringSigning = {}
         self.privateKeyringEncryption = {}
 
+
     def getKeyForSigning(self, keyID):
         try:
             return self.privateKeyringSigning[keyID]
@@ -46,7 +47,7 @@ class PrivateKeyring:
             print("Nije pronadjen kljuc (Signing): " + str(err.args[0]))
             return None
 
-    def getKeyForEncryption(self, keyID):
+    def getKeyForEncryption(self,keyID):
         try:
             return self.privateKeyringEncryption[keyID]
         except KeyError as err:
@@ -86,15 +87,23 @@ class PrivateKeyring:
                 file.write(outputDataPR)
 
 
+    def getKeyID(self, publicKey):
+        newKeyIDbin = publicKey.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        return int(binascii.hexlify(newKeyIDbin), 16) & ((1 << 64) - 1)
+
+
 
     def importKey(self, filename_pu, filename_pr, usage):
         # Load public part of the key
         with open(filename_pu, 'r') as file_pu:
             data = file_pu.read()
             userId = data.split('~')[0]
-            usedAlgorithm = data.split('~')[0]
+            usedAlgorithm = data.split('~')[1]
             publicKey = load_pem_public_key(data.split('~')[2].encode('utf-8'))
-            keyID = PublicKeyring.getKeyID(publicKey=publicKey)
+            keyID = self.getKeyID(publicKey=publicKey)
 
         with open(filename_pr, 'r') as file_pr:
             data = file_pr.read()
@@ -126,7 +135,6 @@ class PrivateKeyring:
 
     def generateKeys(self, name, email, algo, sizeOfKeys, password):
         hashedPassword = hashMD5(password)
-        userID = name + ": " + email
         if algo == "RSA":
             privateKeyEncryption = rsa.generate_private_key(65537, sizeOfKeys)
             publicKeyEncryption = privateKeyEncryption.public_key()
@@ -144,7 +152,7 @@ class PrivateKeyring:
         cipher = DES3.new(hashedPassword,DES3.MODE_ECB)
 
 
-        # Transform Private Keys To Binary
+        # Transform Private Keys To Bytes
         if not isinstance(privateKeyEncryption,tuple):
 
             privateKeyEncryptionBinary = privateKeyEncryption.private_bytes(
@@ -172,7 +180,7 @@ class PrivateKeyring:
         #Generate KeyID for Public Keys
 
 
-        #Transform Public Keys to Binary
+        #Transform Public Keys to Bytes
         if not isinstance(publicKeyEncryption, tuple):
             publicKeyEncryptionBinary = publicKeyEncryption.public_bytes(
                 encoding=serialization.Encoding.DER,
@@ -228,6 +236,17 @@ class PrivateKeyring:
         # privateKeySigningUnPadded = unpad(decrypted, BLOCK_SIZE)
         # privateKeySigningDecrypted = loads(privateKeySigningUnPadded)
 
+    # Removes key from PrivateKeyring
+    def removeKey(self, keyID):
+        if keyID not in self.privateKeyringEncryption.keys() or self.privateKeyringSigning.keys():
+            print('Nije moguce obrisati privatni kljuc s vrednoscu ' + keyID)
+        else:
+            if keyID in self.privateKeyringEncryption.keys():
+                del self.privateKeyringEncryption[keyID]
+            if keyID in self.privateKeyringSigning.keys():
+                del self.privateKeyringSigning
+
+
 
 if __name__ == '__main__':
     pk = PrivateKeyring()
@@ -244,3 +263,4 @@ if __name__ == '__main__':
     # NEED TO TEST IMPORT AND EXPORT
 
 
+    # privateKey.printValues()

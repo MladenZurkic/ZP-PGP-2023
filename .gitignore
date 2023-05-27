@@ -4,3 +4,5 @@
 *.xml
 .idea
 *__pycache__*
+.idea/misc.xml
+.idea/ZP-Projekat-2023.iml
