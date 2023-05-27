@@ -51,7 +51,7 @@ class PublicKeyring:
             return self.publicKeyring[keyID]
         except KeyError as err:
             print('Unos u tabeli s vrednoscu ' + str(err.args[0]) + ' ne postoji...')
-            return None
+            return 1, None
 
     # Used to export key to .pem file
     def exportKey(self, keyID):
@@ -79,6 +79,7 @@ class PublicKeyring:
 
             if keyID in self.publicKeyring.keys():
                 print('Ovaj kljuc vec postoji...')
+                return 1
             else:
                 newPublicKey = PublicKeyringValues(
                     keyID=keyID,
@@ -97,19 +98,20 @@ class PublicKeyring:
 
     # Helper function used to print public keyring
     def printKeyring(self):
+        printTable = []
         for key in self.publicKeyring.keys():
             keyPrint = int(binascii.hexlify(self.publicKeyring[key].publicKey.public_bytes(
                 encoding=serialization.Encoding.DER,
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
             )), 16)
-            curr = [[
+            printTable.append([
                 self.publicKeyring[key].timestamp,
                 self.publicKeyring[key].keyID,
                 keyPrint,
                 self.publicKeyring[key].userID,
                 self.publicKeyring[key].usedAlgorithm
-            ]]
-            print(tabulate(curr, headers=["Timestamp", "keyID", "Public Key", "UserID", "Used algorithm"]))
+            ])
+        print(tabulate(printTable, headers=["Timestamp", "keyID", "Public Key", "UserID", "Used algorithm"]))
 
 
 # Test classes...
@@ -118,8 +120,14 @@ if __name__ == '__main__':
     key = rsa.generate_private_key(65537, 512).public_key()
     pk.insertKey(publicKey=key, userID='abcd', usedAlgorithm='RSA')
     pk.printKeyring()
-    pk.getKey(132465)  # Should report error
+
+    assert pk.getKey(132465)[0] == 1
 
     pk.exportKey(pk.getKeyID(key))
-    pk.importKey(f'{PEM_FOLDER}{pk.getKeyID(key)}.pem')
+    assert pk.importKey(f'{PEM_FOLDER}{pk.getKeyID(key)}.pem')  == 1
+
+    # Test importing of new key
+    key1 = rsa.generate_private_key(65537, 512).public_key()
+    pk.insertKey(key1, 'Filip', 'RSA')
+    pk.printKeyring()
 
