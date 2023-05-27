@@ -76,7 +76,7 @@ class PrivateKeyring:
                 file.write(outputDataPU)
 
             privateKeyInPEM = keyToExport.encryptedPrivateKey.public_bytes(
-                encoding=serialization.Encoding.DER,
+                encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.PKCS8,
                 encryption_algorithm=serialization.NoEncryption()
             ).decode('utf-8')
@@ -92,8 +92,8 @@ class PrivateKeyring:
             encoding=serialization.Encoding.DER,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
-        return int(binascii.hexlify(newKeyIDbin), 16) & ((1 << 64) - 1)
 
+        return int(binascii.hexlify(newKeyIDbin), 16) & ((1 << 64) - 1)
 
 
     def importKey(self, filename_pu, filename_pr, usage):
