@@ -148,7 +148,7 @@ def encryptData(algorithm, publicKey, data):
 def decryptData(algorithm, privateKeyValue, data, passphrase):
 
     hashedPassword = hashMD5(passphrase)
-    encryptedPrivateKey = privateKey.encryptedPrivateKey
+    encryptedPrivateKey = privateKeyValue.encryptedPrivateKey
     cipher = DES3.new(hashedPassword, DES3.MODE_ECB)
 
     decryptedPrivateKeyPadded = cipher.decrypt(encryptedPrivateKey)

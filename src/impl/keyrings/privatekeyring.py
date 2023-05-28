@@ -39,15 +39,14 @@ class PrivateKeyring:
         self.privateKeyringSigning = {}
         self.privateKeyringEncryption = {}
 
-
-    def getKeyForSigning(self, keyID):
+    def getKeyForSigning(self, keyID) -> PrivateKeyringValues or None:
         try:
             return self.privateKeyringSigning[keyID]
         except KeyError as err:
             print("Nije pronadjen kljuc (Signing): " + str(err.args[0]))
             return None
 
-    def getKeyForEncryption(self,keyID):
+    def getKeyForEncryption(self, keyID) -> PrivateKeyringValues or None:
         try:
             return self.privateKeyringEncryption[keyID]
         except KeyError as err:
@@ -221,6 +220,8 @@ class PrivateKeyring:
         )
 
         self.privateKeyringSigning[publicKeySigningID] = newKeySigning
+
+        return publicKeySigningID, publicKeyEncryptionID
 
         # #Decrypting - not needed - just to test
 
