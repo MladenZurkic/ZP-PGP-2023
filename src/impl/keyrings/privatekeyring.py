@@ -1,15 +1,16 @@
 import binascii
 import time
-import struct
-from Crypto.Cipher import DES3
-from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
 
-from src.impl.asymmetric.elGamal import elGamalGenerateKeys, elGamalKeyToBytes, elGamalBytesToKey
+import Crypto.IO.PEM
+from Crypto.Cipher import DES3
+from tabulate import tabulate
+from datetime import datetime
+from Crypto.Util.Padding import pad
 from src.impl.hash.hash import  hashMD5
-from Crypto.Util.Padding import pad, unpad
-from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, dsa
-from src.impl.keyrings.publickeyring import PublicKeyring
+from src.impl.asymmetric.elGamal import elGamalGenerateKeys, elGamalKeyToBytes
+from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
 
 BLOCK_SIZE = 64
 PEM_FOLDER = '../../../../pem_files/'
@@ -54,7 +55,7 @@ class PrivateKeyring:
             return None
 
 
-    def exportKey(self, keyID, usage):
+    def exportKey(self, keyID, usage, PATH):
         if usage == 'singing' or usage == 's':
             keyToExport: PrivateKeyringValues = self.getKeyForSigning(keyID)
         elif usage == 'encryption' or usage == 'e':
@@ -70,18 +71,27 @@ class PrivateKeyring:
             ).decode('utf-8')
 
             outputDataPU = keyToExport.userID + "~" + keyToExport.usedAlgorithm + "~" + publicKeyInPEM
-            filenamePU = f'{PEM_FOLDER}PU_{keyToExport.keyID}.pem'
+            if not PATH:
+                filenamePU = f'{PEM_FOLDER}PU_{keyToExport.keyID}.pem'
+            else:
+                filenamePU = f'{PATH}PU_{keyToExport.keyID}.pem'
             with open(filenamePU, 'w') as file:
                 file.write(outputDataPU)
 
-            privateKeyInPEM = keyToExport.encryptedPrivateKey.public_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption()
-            ).decode('utf-8')
+            privateKeyInPEM = Crypto.IO.PEM.encode(keyToExport.encryptedPrivateKey, "PRIVATE KEY")
 
-            outputDataPR = keyToExport.userID + "~" + keyToExport.usedAlgorithm + "~" + keyToExport.length + "~" + privateKeyInPEM
-            filenamePR = f'{PEM_FOLDER}PR_{keyToExport.keyID}.pem'
+            # #CHECK THIS!! encryptedPrivateKey is stored as bytes, this does not work >.<
+            # privateKeyInPEM = keyToExport.encryptedPrivateKey.public_bytes(
+            #     encoding=serialization.Encoding.PEM,
+            #     format=serialization.PrivateFormat.PKCS8,
+            #     encryption_algorithm=serialization.NoEncryption()
+            # ).decode('utf-8')
+
+            outputDataPR = keyToExport.userID + "~" + keyToExport.usedAlgorithm + "~" + str(keyToExport.length) + "~" + privateKeyInPEM
+            if not PATH:
+                filenamePR = f'{PEM_FOLDER}PR_{keyToExport.keyID}.pem'
+            else:
+                filenamePR = f'{PATH}PR_{keyToExport.keyID}.pem'
             with open(filenamePR, 'w') as file:
                 file.write(outputDataPR)
 
@@ -106,8 +116,8 @@ class PrivateKeyring:
 
         with open(filename_pr, 'r') as file_pr:
             data = file_pr.read()
-            length = data.split('~')[2]
-            encPrivateKey = load_pem_private_key(data.split('~')[3].encode('utf-8'))
+            length = int(data.split('~')[2])
+            encPrivateKey = Crypto.IO.PEM.decode(data.split('~')[3])
 
         newPrivateKey = PrivateKeyringValues(
             keyID=keyID,
@@ -134,6 +144,7 @@ class PrivateKeyring:
 
     def generateKeys(self, name, email, algo, sizeOfKeys, password):
         hashedPassword = hashMD5(password)
+        sizeOfKeys = int(sizeOfKeys)
         if algo == "RSA":
             privateKeyEncryption = rsa.generate_private_key(65537, sizeOfKeys)
             publicKeyEncryption = privateKeyEncryption.public_key()
@@ -246,6 +257,33 @@ class PrivateKeyring:
                 del self.privateKeyringEncryption[keyID]
             if keyID in self.privateKeyringSigning.keys():
                 del self.privateKeyringSigning
+
+
+    # Helper function used to print public keyring
+    def printKeyring(self, type):
+        printTable = []
+        if(type.upper() == "SIGNING" or type == "S"):
+            keyring = self.privateKeyringSigning
+        else:
+            keyring = self.privateKeyringEncryption
+
+        for key in keyring.keys():
+            if isinstance(keyring[key].publicKey, tuple):
+                keyPrint = int(binascii.hexlify(elGamalKeyToBytes(keyring[key].publicKey)), 16)
+            else:
+                keyPrint = int(binascii.hexlify(keyring[key].publicKey.public_bytes(
+                    encoding=serialization.Encoding.DER,
+                    format=serialization.PublicFormat.SubjectPublicKeyInfo
+                )), 16)
+            printTable.append([
+                datetime.fromtimestamp(keyring[key].timestamp),
+                keyring[key].keyID,
+                keyPrint,
+                keyring[key].encryptedPrivateKey,
+                keyring[key].userID,
+                keyring[key].usedAlgorithm
+            ])
+        print(tabulate(printTable, headers=["Timestamp", "keyID", "Public Key", "Encrypted Private Key" ,"UserID", "Used Algorithm"]))
 
 
 

@@ -13,7 +13,9 @@ from src.impl.asymmetric import asymmetric
 publicKeyring = PublicKeyring()
 privateKeyring = PrivateKeyring()
 
+
 GLOBAL_ALGO = 'RSA'
+
 
 class SymmetricEncryptionDecryption:
     def __init__(self, encriptionType):
@@ -21,6 +23,7 @@ class SymmetricEncryptionDecryption:
             self.type = DES3
         else:
             self.type = AES
+
 
     def encrypt(self, publicKeyID, data):
         sessionKey = secrets.token_bytes(24)
@@ -38,6 +41,7 @@ class SymmetricEncryptionDecryption:
         encryptedSessionKey = asymmetric.encryptData(GLOBAL_ALGO, publicKey, sessionKey)[1]
         return encodedData, encryptedSessionKey, publicKeyID
 
+
     def decrypt(self, keyID, password, encryptedData, encryptedSessionKey):
         privateKeyringValue = privateKeyring.getKeyForEncryption(keyID)
         if not privateKeyringValue:
@@ -54,12 +58,14 @@ class SymmetricEncryptionDecryption:
         unpaddedData = self.unpadData(decryptedData)
         return unpaddedData.decode('utf-8')
 
+
     def padData(self, data):
         blockSize = self.type.block_size
         paddingSize = blockSize - (len(data) % blockSize)
         padding = bytes([paddingSize] * paddingSize)
         paddedData = data + padding
         return paddedData
+
 
     def unpadData(self, data):
         paddingSize = data[-1]
