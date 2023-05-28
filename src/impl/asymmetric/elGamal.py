@@ -1,6 +1,7 @@
 import pickle
 from Crypto.Util import number
 
+
 def elGamalGenerateKeys(keySize):
     p = number.getPrime(keySize)
     g = number.getRandomRange(2, p - 1)
@@ -19,7 +20,11 @@ def elGamalEncrypt(plaintext, publicKey):
     k = number.getRandomRange(2, p - 1)
     c1 = pow(g, k, p)
 
-    plaintextEncoded = int.from_bytes(plaintext.encode(), 'big')
+    if not isinstance(plaintext, bytes):
+        plaintextBytes = plaintext.encode()
+    else:
+        plaintextBytes = plaintext
+    plaintextEncoded = int.from_bytes(plaintextBytes, 'big')
 
     c2 = (plaintextEncoded * pow(y, k, p)) % p
     return c1, c2
@@ -33,7 +38,12 @@ def elGamalDecrypt(ciphertext, privateKey):
     sInverse = number.inverse(s, p)
 
     plaintextEncoded = (c2 * sInverse) % p
-    plaintext = plaintextEncoded.to_bytes((plaintextEncoded.bit_length() + 7) // 8, 'big').decode()
+
+    try:
+        plaintext = plaintextEncoded.to_bytes((plaintextEncoded.bit_length() + 7) // 8, 'big').decode()
+    except:
+        plaintext = plaintextEncoded.to_bytes((plaintextEncoded.bit_length() + 7) // 8, 'big')
+
     return plaintext
 
 

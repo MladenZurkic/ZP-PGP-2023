@@ -5,6 +5,7 @@ from base64 import b64encode, b64decode
 
 from src.impl.keyrings.privatekeyring import PrivateKeyring, PrivateKeyringValues
 from src.impl.keyrings.publickeyring import PublicKeyring, PublicKeyringValues
+from src.impl.asymmetric import asymmetric
 
 # Probably should be replaced by global instances
 publicKeyring = PublicKeyring()
@@ -34,7 +35,7 @@ class SymmetricEncryptionDecryption:
         publicKey = publicKeyringValue.publicKey
         """
         # Uncomment after implementation of AsymmetricEncryptionDecryption class
-        # encryptedSessionKey = AsymmetricEncryptionDecryption.encryptData(GLOBAL_ALGO, publicKey, sessionKey)
+        # encryptedSessionKey = asymmetric.encryptData(GLOBAL_ALGO, publicKey, sessionKey)
         encryptedSessionKey = sessionKey
 
         return encodedData, encryptedSessionKey#, publicKeyID
@@ -45,7 +46,9 @@ class SymmetricEncryptionDecryption:
             print('Kljuc sa ID: ' + str(keyID) + ' ne postoji...')
             # return 1, None
 
-        # sessionKey = AsymmetricEncryptionDecryption.decryptData(GLOBAL_ALGO, keyID, privateKeyringValue, password)
+        # Filipe zar ovde ne treba da se prosledi encryptedSessionKey a ne keyID?
+
+        # sessionKey = asymmetric.decryptData(GLOBAL_ALGO, privateKeyringValue, keyID, password)
         sessionKey = encryptedSessionKey
         cipher = self.type.new(sessionKey, self.type.MODE_ECB)
         encryptedData = b64decode(encryptedData)

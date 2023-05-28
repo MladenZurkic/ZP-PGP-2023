@@ -1,20 +1,14 @@
 import pickle
-import struct
 
-from Crypto.Util import number
 from Crypto.Cipher import DES3
 from Crypto.Util.Padding import unpad
-from cryptography.hazmat.primitives import serialization
+from src.impl.hash.hash import hashMD5
+from src.impl.keyrings.privatekeyring import PrivateKeyring
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import serialization, hashes
 from src.impl.asymmetric.elGamal import elGamalGenerateKeys, elGamalEncrypt, elGamalKeyToBytes, elGamalBytesToKey, \
     elGamalDecrypt
-from src.impl.hash.hash import hashMD5
-from Crypto.Hash import SHA1
-from Crypto.Signature import pkcs1_15
-from Crypto.Signature.pkcs1_15 import PKCS115_SigScheme
 
-from Crypto.PublicKey.RSA import import_key
-
-from src.impl.keyrings.privatekeyring import PrivateKeyring
 
 BLOCK_SIZE = 64
 
@@ -32,7 +26,7 @@ def testElGamal():
     plaintextNew = elGamalDecrypt(ciphertext, privateKey)
     print(plaintextNew)
 
-    print("TEASTA")
+    print("TestElGamalPart2")
     print(publicKey)
     byte = elGamalKeyToBytes(publicKey)
     print(byte)
@@ -41,61 +35,189 @@ def testElGamal():
 
 ## MOZE DA BACI ValueError, sluzi da se prepozna kada nastane greska prilikom potpisivanja, ukoliko pascode nije dobro unet
 ## Bacice tu gresku!
+# Works
 def signData(algorithm, privateKey, data, passphrase):
     hashedPassword = hashMD5(passphrase)
     encryptedPrivateKey = privateKey.encryptedPrivateKey
     cipher = DES3.new(hashedPassword,DES3.MODE_ECB)
 
-    decryptedPrivateKey2 = 0
-    decryptedPrivateKey = cipher.decrypt(encryptedPrivateKey)
-    decryptedPrivateKeyBytes = unpad(decryptedPrivateKey, BLOCK_SIZE)
+    decryptedPrivateKeyPadded = cipher.decrypt(encryptedPrivateKey)
 
-    test = import_key(decryptedPrivateKeyBytes)
-    print("TEST")
-    print(test)
-    # decryptedPrivateKey2 = serialization.load_der_private_key(decryptedPrivateKeyBytes, None)
+    try:
+        decryptedPrivateKeyBytes = unpad(decryptedPrivateKeyPadded, BLOCK_SIZE)
+        decryptedPrivateKey = serialization.load_der_private_key(decryptedPrivateKeyBytes, None)
+    except ValueError:
+        print("testing ValueError, got to except part")
+        return 1, None
+
+    if isinstance(data, (bytes, bytearray)):
+        dataBytes = data
+    else:
+        dataBytes = pickle.dumps(data)
+
+    if(algorithm.upper() == "RSA"):
+        sha1Hash = hashes.Hash(hashes.SHA1())
+
+        sha1Hash.update(dataBytes)
+        hashValue = sha1Hash.finalize()
+
+        try:
+            signature = decryptedPrivateKey.sign(
+                hashValue,
+                padding.PKCS1v15(),
+                hashes.SHA1()
+            )
+        except TypeError:
+            #Prosledjeni kljuc je drugacijeg tipa od algoritma koji je upisan da se koristi
+            return 2, None
+    else:
+        try:
+            signature = decryptedPrivateKey.sign(
+                dataBytes,
+                hashes.SHA1()
+            )
+        except TypeError:
+            # Prosledjeni kljuc je drugacijeg tipa od algoritma koji je upisan da se koristi
+            return 2, None
+
+    return 0, signature
+
+# Works
+def verifySignedData(algorithm, data, signature, publicKey):
+    if isinstance(data, (bytes, bytearray)):
+        dataBytes = data
+    else:
+        dataBytes = pickle.dumps(data)
+
+    sha1Hash = hashes.Hash(hashes.SHA1())
+    sha1Hash.update(dataBytes)
+    hashValue = sha1Hash.finalize()
+
+    # Da li cemo da prosledjujemo objekat PublicKeyringValues ili samo publicKey
+    publicKeyObject = publicKey
+
+    if(algorithm.upper() == "RSA"):
+        try:
+            publicKeyObject.verify(
+                signature,
+                hashValue,
+                padding.PKCS1v15(),
+                hashes.SHA1()
+            )
+        except:
+            return 1
+    else:
+        try:
+            publicKeyObject.verify(
+                signature,
+                dataBytes,
+                hashes.SHA1()
+            )
+        except:
+            return 1
+    return 0
 
 
-    print(decryptedPrivateKey2)
-    hashObject = SHA1.new()
-    hashObject.update(data.encode())
+def encryptData(algorithm, publicKey, data):
+    if isinstance(data, (bytes, bytearray)):
+        dataBytes = data
+    else:
+        dataBytes = pickle.dumps(data)
 
-    signer = pkcs1_15.new(test)
-    signature = signer.sign(hashObject)
+    if(algorithm.upper() == "RSA"):
+        try:
+            ciphertext = publicKey.encrypt(
+                dataBytes,
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
+            )
+        except:
+            return 1, None
+    else:
+        try:
+            ciphertext = elGamalEncrypt(dataBytes, publicKey)
+        except:
+            return 2, None
+
+    return 0, ciphertext
 
 
+def decryptData(algorithm, privateKeyValue, data, passphrase):
 
-    return 1, None
+    hashedPassword = hashMD5(passphrase)
+    encryptedPrivateKey = privateKey.encryptedPrivateKey
+    cipher = DES3.new(hashedPassword, DES3.MODE_ECB)
 
-    #*** Ovako vracamo
-   # return 0, data
+    decryptedPrivateKeyPadded = cipher.decrypt(encryptedPrivateKey)
+
+    try:
+        decryptedPrivateKeyBytes = unpad(decryptedPrivateKeyPadded, BLOCK_SIZE)
+        if(algorithm.upper() == "RSA"):
+            decryptedPrivateKey = serialization.load_der_private_key(decryptedPrivateKeyBytes, None)
+        else:
+            decryptedPrivateKey = elGamalBytesToKey(decryptedPrivateKeyBytes)
+    except ValueError as err:
+        print("testing ValueError, got to except part")
+        print(err)
+        return 1, None
+
+
+    if(algorithm.upper() == "RSA"):
+        try:
+            plaintext = decryptedPrivateKey.decrypt(
+                data,
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
+            )
+        except:
+            return 2, None
+    else:
+        plaintext = elGamalDecrypt(data, decryptedPrivateKey)
+
+    return 0, plaintext
+
 
 if __name__ == '__main__':
-    # # testElGamal()
-    # pk = PrivateKeyring()
-    # pk.generateKeys("Mladen", "mladen@gmail.com", "RSA", 2048, "123F")
-    # print(pk.privateKeyringSigning.values())
-    #
-    # key = list(pk.privateKeyringSigning)
-    # privateKey = pk.getKeyForSigning(key[0])
-    #
-    # signData("RSA", privateKey, "Mladen123", "123E")
 
+    testElGamal()
 
     pk = PrivateKeyring()
-    pk.generateKeys("Mladen", "mladen@gmail.com", "RSA", 2048, "123FFFF")
+    pk.generateKeys("Mladen", "mladen@gmail.com", "RSA", 2048, "123")
     print(pk.privateKeyringSigning.values())
 
     key = list(pk.privateKeyringSigning)
     privateKey = pk.getKeyForSigning(key[0])
+    publicKey = privateKey.publicKey
+
+    returnCode, signature = signData("RSA", privateKey, "Mladen123", "123")
+
+    print(returnCode)
+    print(signature)
+
+    #verify signed message
+    print(verifySignedData("RSA", "Mladen123", signature, publicKey))
 
 
+    #Testing Enc/Decr
+    print("TestEcryptionDecryptionPart")
+    pk.generateKeys("Mladen", "mladen@gmail.com", "DSA+ElGamal", 2048, "123")
 
-    print(signData("DSA", privateKey, "Mladen123", "123FFFE"))
-    print("Print signdata")
+    key = list(pk.privateKeyringEncryption)
+    privateKey = pk.getKeyForEncryption(key[1])
+    publicKey = privateKey.publicKey
 
 
-    data = signData("RSA", privateKey, "Filip", "123")
-    if(data[0]):
-        print("GRESKA")
-
+    returnCode, encrypted = encryptData("DSA+ElGamal", publicKey, "test123")
+    if not returnCode:
+        returnCode, decrypted = decryptData("DSA+ElGamal", privateKey, encrypted, "123")
+        if not returnCode:
+            print(returnCode)
+            print(decrypted)
+            print("starting data: ",end="")
+            print(pickle.loads(decrypted))
