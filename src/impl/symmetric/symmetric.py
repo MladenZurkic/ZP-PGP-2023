@@ -63,7 +63,7 @@ class SymmetricEncryptionDecryption:
         blockSize = self.type.block_size
         paddingSize = blockSize - (len(data) % blockSize)
         padding = bytes([paddingSize] * paddingSize)
-        paddedData = data + padding
+        paddedData = data.encode('utf-8') + padding
         return paddedData
 
 

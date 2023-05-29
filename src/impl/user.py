@@ -44,7 +44,7 @@ class User:
         if returnCode:
             print("ERROR: Could not Sign data!")
             return None
-        return base64.b64encode(signature).decode('ascii')
+        return base64.b64encode(signature).decode('utf-8')
 
 
     def verifySignature(self, data, signature):
@@ -64,9 +64,8 @@ class User:
         privateKey = user1.privateKeyring.getKeyForSigning(key[0])
         publicKey = privateKey.publicKey
         encryption = SymmetricEncryptionDecryption("DES3")
-        encryptedData, encryptedSessionKey, publicKeyID = encryption.encrypt(publicKey, data)
+        encryptedData, encryptedSessionKey, publicKeyID = encryption.encrypt(user1.publicKeyring.getKeyID(publicKey), data)
         return encryptedData, base64.b64encode(encryptedSessionKey).decode('ascii'), base64.b64encode(publicKeyID).decode('ascii')
-
 
 
 if __name__ == '__main__':
@@ -98,11 +97,11 @@ if __name__ == '__main__':
     # ****** ENCRYPTION PART: ******
     # Mora sa Filipom, mora da se menja symmetric padding myb
 
-    # encodedData, encryptedSessionKey, publicKeyID = user1.encryptData(concatData)
-    #
-    # concatSignEncr = encodedData + "~#~" + encryptedSessionKey + "~#~" + publicKeyID
-    #
-    # print(concatSignEncr)
+    encodedData, encryptedSessionKey, publicKeyID = user1.encryptData(concatData)
+
+    concatSignEncr = encodedData + "~#~" + encryptedSessionKey + "~#~" + publicKeyID
+
+    print(concatSignEncr)
 
 
     # ****** IMPORT EXPORT: ******
