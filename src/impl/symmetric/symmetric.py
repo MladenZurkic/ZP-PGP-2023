@@ -74,6 +74,9 @@ class SymmetricEncryptionDecryption:
 
 if __name__ == '__main__':
     # Fill with example keys
+    privateKeyring = PrivateKeyring()
+    publicKeyring = PublicKeyring()
+
     tmp, puID = privateKeyring.generateKeys('Filip', 'filip@mail.com', GLOBAL_ALGO, 2048, 'password')
     pu = privateKeyring.getKeyForEncryption(puID).publicKey
     pr = privateKeyring.getKeyForEncryption(puID).encryptedPrivateKey
@@ -81,8 +84,8 @@ if __name__ == '__main__':
     publicKeyring.insertKey(pu, 'Filip: filip@mail.com', 'RSA')
 
     # Example usage
-    data = b"Hello, World!"
-    encryptor = SymmetricEncryptionDecryption('DES3')
+    data = "Hello, World!"
+    encryptor = SymmetricEncryptionDecryption('DES3', publicKeyring=publicKeyring, privateKeyring=privateKeyring)
 
     encrypted_data, key, publicKeyID = encryptor.encrypt(puID, data)
     print("Encrypted data:", encrypted_data)
