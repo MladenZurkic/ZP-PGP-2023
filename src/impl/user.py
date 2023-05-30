@@ -1,4 +1,5 @@
 import base64
+import binascii
 
 from src.impl.asymmetric import asymmetric
 from src.impl.keyrings.privatekeyring import PrivateKeyring
@@ -21,6 +22,8 @@ class User:
         password = input("Please enter a password that will be used to encrypt your private key: ")
 
         signingKeyID, encyptionKeyID = self.privateKeyring.generateKeys(name, email, algorithm, sizeOfKeys, password)
+        
+        self.publicKeyring.insertKey(self.privateKeyring.getKeyForEncryption(encyptionKeyID).publicKey, name, usedAlgorithm=algorithm)
 
         print("Keys Generated! The IDs of generated keys are: ")
         print("Key for Signing: " + str(signingKeyID))
@@ -60,13 +63,22 @@ class User:
 
 
     def encryptData(self, data):
-        key = list(user1.privateKeyring.privateKeyringSigning)
-        privateKey = user1.privateKeyring.getKeyForSigning(key[0])
+        key = list(user1.privateKeyring.privateKeyringEncryption)
+        privateKey = user1.privateKeyring.getKeyForEncryption(key[0])
         publicKey = privateKey.publicKey
-        encryption = SymmetricEncryptionDecryption("DES3")
+        encryption = SymmetricEncryptionDecryption("DES3", self.publicKeyring, self.privateKeyring)
         encryptedData, encryptedSessionKey, publicKeyID = encryption.encrypt(user1.publicKeyring.getKeyID(publicKey), data)
-        return encryptedData, base64.b64encode(encryptedSessionKey).decode('ascii'), base64.b64encode(publicKeyID).decode('ascii')
 
+        encryptedSessionKeyStr = base64.b64encode(encryptedSessionKey).decode('ascii')
+        publicKeyIDStr = str(publicKeyID)
+
+        return encryptedData, encryptedSessionKeyStr, publicKeyIDStr
+
+    def decryptData(self, data, password):
+        encodedData, encryptedSessionKeyStr, publicKeyIDStr = data.split("~#~")
+        encryptedSessionKey = binascii.a2b_base64(encryptedSessionKeyStr)
+        decryption = SymmetricEncryptionDecryption("DES3", self.publicKeyring, self.privateKeyring)
+        return decryption.decrypt(int(publicKeyIDStr), password, encodedData, encryptedSessionKey)
 
 if __name__ == '__main__':
     user1 = User()
@@ -83,13 +95,13 @@ if __name__ == '__main__':
 
     user1.verifySignature(data, signature)
 
-    #Simulate sending data:
+    # Simulate sending data:
     concatData = data + "~#~" + signature
 
-    #SEND concatData
+    # SEND concatData
     print("SENDING..." + concatData)
 
-    #Unpack sentData
+    # Unpack sentData
     data, signature = concatData.split("~#~")
 
     user1.verifySignature(data, signature)
@@ -101,13 +113,22 @@ if __name__ == '__main__':
 
     concatSignEncr = encodedData + "~#~" + encryptedSessionKey + "~#~" + publicKeyID
 
-    print(concatSignEncr)
+    print('SENDING ENCRYPTION PART... ' + concatSignEncr)
 
+    # ****** DECRYPTION PART: ******
+
+    receivedData = concatSignEncr
+
+    decryptedData = user1.decryptData(receivedData, input('Password: '))
+
+    print('DECRYPTED DATA: ' + decryptedData)
+    assert decryptedData == concatData
 
     # ****** IMPORT EXPORT: ******
     key = list(user1.privateKeyring.privateKeyringSigning)
     privateKey = user1.privateKeyring.getKeyForSigning(key[0])
     publicKey = privateKey.publicKey
+
 
     # Ovo radi
     # user1.privateKeyring.exportKey(privateKey.keyID, "s", "C:/Users/Mladen/Desktop/TestZPExport/")

@@ -9,20 +9,19 @@ from src.impl.keyrings.privatekeyring import PrivateKeyring, PrivateKeyringValue
 from src.impl.keyrings.publickeyring import PublicKeyring, PublicKeyringValues
 from src.impl.asymmetric import asymmetric
 
-# Probably should be replaced by global instances
-publicKeyring = PublicKeyring()
-privateKeyring = PrivateKeyring()
-
 
 GLOBAL_ALGO = 'RSA'
 
 
 class SymmetricEncryptionDecryption:
-    def __init__(self, encriptionType):
+    def __init__(self, encriptionType, publicKeyring, privateKeyring):
         if encriptionType == '3DES' or encriptionType == 'DES3':
             self.type = DES3
         else:
             self.type = AES
+
+        self.publicKeyring = publicKeyring
+        self.privateKeyring = privateKeyring
 
 
     def encrypt(self, publicKeyID, data):
@@ -32,7 +31,7 @@ class SymmetricEncryptionDecryption:
         encryptedData = cipher.encrypt(paddedData)
         encodedData = b64encode(encryptedData).decode('utf-8')
 
-        publicKeyringValue: PublicKeyringValues = publicKeyring.getKey(publicKeyID)
+        publicKeyringValue: PublicKeyringValues = self.publicKeyring.getKey(publicKeyID)
         if not publicKeyringValue:
             print('Kljuc sa ID: ' + str(publicKeyID) + ' ne postoji...')
             # return 1, None
@@ -43,7 +42,7 @@ class SymmetricEncryptionDecryption:
 
 
     def decrypt(self, keyID, password, encryptedData, encryptedSessionKey):
-        privateKeyringValue = privateKeyring.getKeyForEncryption(keyID)
+        privateKeyringValue = self.privateKeyring.getKeyForEncryption(keyID)
         if not privateKeyringValue:
             print('Kljuc sa ID: ' + str(keyID) + ' ne postoji...')
             # return 1, None
