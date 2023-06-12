@@ -7,38 +7,244 @@
     <x>0</x>
     <y>0</y>
     <width>783</width>
-    <height>337</height>
+    <height>573</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>20</y>
-      <width>101</width>
-      <height>41</height>
+      <width>751</width>
+      <height>501</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Send Message</string>
+    <property name="currentIndex">
+     <number>0</number>
     </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_3">
-    <property name="geometry">
-     <rect>
-      <x>140</x>
-      <y>20</y>
-      <width>101</width>
-      <height>41</height>
-     </rect>
+    <property name="movable">
+     <bool>true</bool>
     </property>
-    <property name="text">
-     <string>Open Message</string>
-    </property>
+    <widget class="QWidget" name="generateKeysTab">
+     <attribute name="title">
+      <string>Generate Keys</string>
+     </attribute>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>110</x>
+        <y>80</y>
+        <width>61</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>16</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Ime:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_2">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>140</y>
+        <width>91</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>16</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>E-mail:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_3">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>190</y>
+        <width>141</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>16</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Vrsta algo:</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="radioButton">
+      <property name="geometry">
+       <rect>
+        <x>190</x>
+        <y>190</y>
+        <width>81</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>RSA</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="radioButton_2">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>190</y>
+        <width>191</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>DSA+ElGamal</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_4">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>250</y>
+        <width>141</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>16</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Key Size:</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="radioButton_3">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>250</y>
+        <width>101</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>2048</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="radioButton_4">
+      <property name="geometry">
+       <rect>
+        <x>190</x>
+        <y>250</y>
+        <width>81</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>1024</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_5">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>300</y>
+        <width>141</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>16</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Password:</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>390</y>
+        <width>121</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Generate</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="publicKeyRingTab">
+     <attribute name="title">
+      <string>Public KeyRing</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="privateKeyRingTab">
+     <attribute name="title">
+      <string>Private KeyRing</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="sendMessageTab">
+     <attribute name="title">
+      <string>Send Message</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="receiveMessageTab">
+     <attribute name="title">
+      <string>Receive Message</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="importTab">
+     <attribute name="title">
+      <string>Import</string>
+     </attribute>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -47,29 +253,9 @@
      <x>0</x>
      <y>0</y>
      <width>783</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>&amp;File</string>
-    </property>
-    <addaction name="actionOpen"/>
-   </widget>
-   <widget class="QMenu" name="menuKeys">
-    <property name="title">
-     <string>&amp;Keys</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuHelp">
-    <property name="title">
-     <string>&amp;Help</string>
-    </property>
-    <addaction name="actionAbout"/>
-   </widget>
-   <addaction name="menuFile"/>
-   <addaction name="menuKeys"/>
-   <addaction name="menuHelp"/>
   </widget>
   <action name="actionOpen">
    <property name="text">
