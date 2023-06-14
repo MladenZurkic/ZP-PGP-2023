@@ -14,13 +14,7 @@ class User:
         self.privateKeyring = PrivateKeyring()
 
 
-    def generateKeys(self):
-        name = input("Please enter your name: ")
-        email = input("Please enter your email: ")
-        algorithm = input("Please enter \"RSA\" or \"DSA+ElGamal\": ") #Ovo ce biti radiobutton npr, nece se unositi
-        sizeOfKeys = input("1024 or 2048 size of keys? ")
-        password = input("Please enter a password that will be used to encrypt your private key: ")
-
+    def generateKeys(self, name, email, algorithm, sizeOfKeys, password):
         signingKeyID, encyptionKeyID = self.privateKeyring.generateKeys(name, email, algorithm, sizeOfKeys, password)
         
         self.publicKeyring.insertKey(self.privateKeyring.getKeyForEncryption(encyptionKeyID).publicKey, name, usedAlgorithm=algorithm)
@@ -38,11 +32,8 @@ class User:
         self.privateKeyring.printKeyring("ENCRYPTION")
 
 
-    def signData(self, data):
-        print("select private key to sign with: #to be implemented")
-        key = list(self.privateKeyring.privateKeyringSigning)
-        privateKey = self.privateKeyring.getKeyForSigning(key[0])
-        passphrase = input("Input password to encrypt private key: ")
+    def signData(self, data, keyID, passphrase):
+        privateKey = self.privateKeyring.getKeyForSigning(keyID)
         returnCode, signature = asymmetric.signData(privateKey.usedAlgorithm, privateKey, data, passphrase)
         if returnCode:
             print("ERROR: Could not Sign data!")
@@ -62,12 +53,9 @@ class User:
         print("Signature is GOOD!")
 
 
-    def encryptData(self, data):
-        key = list(user1.privateKeyring.privateKeyringEncryption)
-        privateKey = user1.privateKeyring.getKeyForEncryption(key[0])
-        publicKey = privateKey.publicKey
-        encryption = SymmetricEncryptionDecryption("DES3", self.publicKeyring, self.privateKeyring)
-        encryptedData, encryptedSessionKey, publicKeyID = encryption.encrypt(user1.publicKeyring.getKeyID(publicKey), data)
+    def encryptData(self, data, publicKeyID, algorithm):
+        encryption = SymmetricEncryptionDecryption(algorithm, self.publicKeyring, self.privateKeyring)
+        encryptedData, encryptedSessionKey = encryption.encrypt(publicKeyID, data)
 
         encryptedSessionKeyStr = base64.b64encode(encryptedSessionKey).decode('ascii')
         publicKeyIDStr = str(publicKeyID)
@@ -81,6 +69,8 @@ class User:
         return decryption.decrypt(int(publicKeyIDStr), password, encodedData, encryptedSessionKey)
 
 if __name__ == '__main__':
+
+    #DOES NOT WORK ANYMORE :(
     user1 = User()
     user1.generateKeys()
     user1.printKeys()

@@ -38,7 +38,7 @@ class SymmetricEncryptionDecryption:
 
         publicKey = publicKeyringValue.publicKey
         encryptedSessionKey = asymmetric.encryptData(GLOBAL_ALGO, publicKey, sessionKey)[1]
-        return encodedData, encryptedSessionKey, publicKeyID
+        return encodedData, encryptedSessionKey
 
 
     def decrypt(self, keyID, password, encryptedData, encryptedSessionKey):

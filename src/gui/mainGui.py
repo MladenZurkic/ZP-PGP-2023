@@ -1,8 +1,27 @@
+import datetime
 import sys
+import time
 
-from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QDialog
+from PyQt5 import QtWidgets
 from src.gui.pyFiles.mainWindow import Ui_MainWindow
+from src.gui.pyFiles.sendPrompt import Ui_Dialog
+from src.impl.user import User
+from src.impl.compression.compression import compress, decompress
+from src.impl.conversion.conversion import decodeFromRadix64, encodeToRadix64
+
+class SendPrompt(QDialog, Ui_Dialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.buttonBox.accepted.connect(self.buttonOK)
+        self.buttonBox.rejected.connect(self.buttonCancel)
+
+    def buttonOK(self):
+        self.accept()
+
+    def buttonCancel(self):
+        self.reject()
 
 class Window(QMainWindow, Ui_MainWindow):
 
@@ -10,11 +29,228 @@ class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        self.pushButton.clicked.connect(self.testing)
-        self.actionAbout.triggered.connect(self.testing)
 
-    def testing(self):
-        print("test")
+        self.generateButton.clicked.connect(self.generateKeysGUI)
+        self.sendSignCheckBox.clicked.connect(self.signCheckBoxClicked)
+        self.sendEncryptCheckBox.clicked.connect(self.encryptCheckBoxClicked)
+        self.sendButton.clicked.connect(self.sendMessage)
+
+        self.receiveBrowsePathInputText.clicked.connect(self.receiveBrowseClicked)
+
+        self.importKeyTypePrivateRadioButton.clicked.connect(self.importKeyTypePrivateClicked)
+        self.importKeyTypePublicRadioButton.clicked.connect(self.importKeyTypePublicClicked)
+        self.importBrowseForPUButton.clicked.connect(self.importBrowsePUClicked)
+        self.importBrowseForPRButton.clicked.connect(self.importBrowsePRClicked)
+
+        #Disable fileds in send tab:
+        self.sendSignPrivateIDInput.setDisabled(True)
+        self.sendSignPrivateIDInput.setStyleSheet("QTextEdit { background-color: #a3a3a3; }")
+        self.sendPrivateIDSignLabel.setStyleSheet("QLabel { color: #a3a3a3; }")
+
+        self.sendAESRadioButton.setDisabled(True)
+        self.send3DESRadioButton.setDisabled(True)
+        self.sendEncryptPublicIDInputText.setDisabled(True)
+        self.sendEncryptPublicIDInputText.setStyleSheet("QTextEdit { background-color: #a3a3a3; }")
+        self.sendPublicIDEncryptLabel.setStyleSheet("QLabel { color: #a3a3a3; }")
+        self.sendAESRadioButton.setStyleSheet("QRadioButton { color: #a3a3a3; }")
+        self.send3DESRadioButton.setStyleSheet("QRadioButton { color: #a3a3a3; }")
+
+        #Disable fields in import tab:
+        self.importPathForPRInputText.setDisabled(True)
+        self.importPathForPRInputText.setStyleSheet("QTextEdit { background-color: #a3a3a3; }")
+        self.importPathForPRLabel.setStyleSheet("QLabel { color: #a3a3a3; }")
+        self.importBrowseForPRButton.setDisabled(True)
+        self.importBrowseForPRButton.setStyleSheet("QPushButton { background-color: #a3a3a3; }")
+
+        self.generateErrorLabel.setStyleSheet("QLabel { color: red; }")
+        self.sendErrorLabel.setStyleSheet("QLabel { color: red; }")
+
+        self.user = User()
+
+    def checkFields(self, forWhat):
+        match forWhat:
+            case "generateKeys":
+                self.generateErrorLabel.setStyleSheet("QLabel { color: red; }")
+                if (self.generateNameInputText.toPlainText() == ""):
+                    self.generateErrorLabel.setText("Name is empty!")
+                    return -1;
+
+                if (self.generateEmailInputText.toPlainText() == ""):
+                    self.generateErrorLabel.setText("Email is empty!")
+                    return -1;
+
+                if not (self.generateRSARadioButton.isChecked() or self.generateDSAElGamalRadioButton.isChecked()):
+                    self.generateErrorLabel.setText("Algorithm is not selected!")
+                    return -1;
+
+                if not (self.generateKeySize1024RadioButton.isChecked() or self.generateKeysize2048RadioButton.isChecked()):
+                    self.generateErrorLabel.setText("Key Size is not selected!")
+                    return -1;
+
+                if (self.generatePasswordInputText.toPlainText() == ""):
+                    self.generateErrorLabel.setText("Password is empty!")
+                    return -1;
+                return 0;
+
+            case "send":
+                self.sendErrorLabel.setStyleSheet("QLabel { color: red; }")
+                if(self.sendMessageInputText.toPlainText() == ""):
+                    self.sendErrorLabel.setText("Message is empty!")
+                    return -1;
+
+                if(self.sendSignCheckBox.isChecked() == True):
+                    if(self.sendSignPrivateIDInput.toPlainText() == ""):
+                        self.sendErrorLabel.setText("Private ID for Signing is empty!")
+                        return -1;
+
+                if(self.sendEncryptCheckBox.isChecked() == True):
+                    if not (self.sendAESRadioButton.isChecked() or self.send3DESRadioButton.isChecked()):
+                        self.sendErrorLabel.setText("Algorithm is not selected!")
+                        return -1;
+
+                    if(self.sendEncryptPublicIDInputText.toPlainText() == ""):
+                        self.sendErrorLabel.setText("Public ID for Encryption is empty!")
+                        return -1;
+                if(self.sendFilenameInputText.toPlainText() == ""):
+                    self.sendErrorLabel.setText("Filename is empty!")
+                    return -1;
+                return 0;
+            case "receive":
+                pass
+
+            case "import":
+                pass
+
+    def generateKeysGUI(self):
+        #Check all fields:
+        if(self.checkFields("generateKeys") == 0):
+            self.generateErrorLabel.setText("Key Generated!")
+            self.generateErrorLabel.setStyleSheet("QLabel { color: green; }")
+            name = self.generateNameInputText.toPlainText()
+            email = self.generateEmailInputText.toPlainText()
+            algorithm = "RSA" if(self.generateRSARadioButton.isChecked()) else "DSA+ElGamal"
+            keySize = 1024 if(self.generateKeySize1024RadioButton.isChecked()) else 2048
+            password = self.generatePasswordInputText.toPlainText()
+            self.user.generateKeys(name, email, algorithm, keySize, password)
+            self.user.printKeys()
+
+    def sendMessage(self):
+        if(self.checkFields("send") == 0):
+            message = self.sendMessageInputText.toPlainText()
+            timestamp = time.time()
+            filename = self.sendFilenameInputText.toPlainText()
+
+            data = message + "~#~" + str(timestamp) + "~#~" + filename
+
+            #Open prompt for password:
+            popup = SendPrompt()
+            if(popup.exec_() == QDialog.Accepted):
+                password = popup.passwordInputText.toPlainText()
+            else:
+                self.sendErrorLabel.setText("Password not entered or not correct!")
+                return -1;
+
+            #Sign data if selected:
+            if(self.sendSignCheckBox.isChecked() == True):
+                privateID = self.sendSignPrivateIDInput.toPlainText()
+                signature = self.user.signData(data, privateID, password)
+                data = data + "~#~" + signature + "~#~" + "LEADING TWO OCTETS?" + "~#~" + self.user.privateKeyring.getKeyID(privateID) + "~#~" + timestamp
+
+            #Compress data if selected:
+            if(self.sendCompressCheckBox.isChecked() == True):
+                data = compress(data)
+
+            #Enctypt data if selected:
+            if(self.sendEncryptCheckBox.isChecked() == True):
+                publicID = self.sendEncryptPublicIDInputText.toPlainText()
+                algorithm = "AES" if(self.sendAESRadioButton.isChecked()) else "3DES"
+                encryptedData, encryptedSessionKey, publicKeyID = self.user.encryptData(data, publicID, algorithm)
+                data = encryptedData + "~#~" + encryptedSessionKey + "~#~" + publicKeyID
+
+            #Convert to Radix if selected:
+            if(self.sendRadixCheckBox.isChecked() == True):
+                data = encodeToRadix64(data)
+
+            #Save to file:
+            frame = QFileDialog.getSaveFileName(self, 'Save File', 'C:\\'+filename+'.txt', "Txt File (*.txt)")
+            if(frame[0] == ""):
+                self.sendErrorLabel.setText("Message not saved.")
+            else:
+                with open(frame[0], 'w') as f:
+                    f.write(data)
+                self.sendErrorLabel.setText("Saved Message at:" + frame[0])
+                self.sendErrorLabel.setStyleSheet("QLabel { color: green; }")
+
+
+    def signCheckBoxClicked(self):
+        if(self.sendSignCheckBox.isChecked() == True):
+            self.sendSignPrivateIDInput.setDisabled(False)
+            self.sendSignPrivateIDInput.setStyleSheet("")
+            self.sendPrivateIDSignLabel.setStyleSheet("")
+        else:
+            self.sendSignPrivateIDInput.setDisabled(True)
+            self.sendSignPrivateIDInput.setStyleSheet("QTextEdit { background-color: #a3a3a3; }")
+            self.sendPrivateIDSignLabel.setStyleSheet("QLabel { color: #a3a3a3; }")
+
+
+    def encryptCheckBoxClicked(self):
+        if(self.sendEncryptCheckBox.isChecked() == True):
+            self.sendAESRadioButton.setDisabled(False)
+            self.send3DESRadioButton.setDisabled(False)
+            self.sendEncryptPublicIDInputText.setDisabled(False)
+            self.sendEncryptPublicIDInputText.setStyleSheet("")
+            self.sendPublicIDEncryptLabel.setStyleSheet("")
+            self.sendAESRadioButton.setStyleSheet("")
+            self.send3DESRadioButton.setStyleSheet("")
+        else:
+            self.sendAESRadioButton.setDisabled(True)
+            self.send3DESRadioButton.setDisabled(True)
+            self.sendEncryptPublicIDInputText.setDisabled(True)
+            self.sendEncryptPublicIDInputText.setStyleSheet("QTextEdit { background-color: #a3a3a3; }")
+            self.sendPublicIDEncryptLabel.setStyleSheet("QLabel { color: #a3a3a3; }")
+            self.sendAESRadioButton.setStyleSheet("QRadioButton { color: #a3a3a3; }")
+            self.send3DESRadioButton.setStyleSheet("QRadioButton { color: #a3a3a3; }")
+
+    def receiveBrowseClicked(self):
+        frame = QFileDialog.getOpenFileName(self, 'Open Message to Read', 'c:\\', "All files (*.*)")
+        self.receiveMessagePathInput.setText(frame[0])
+
+    def importBrowsePUClicked(self):
+        frame = QFileDialog.getOpenFileName(self, 'Open Public Key PEM File', 'c:\\', "PEM Files (*.pem)")
+        self.importPathForPUInputText.setText(frame[0])
+
+    def importBrowsePRClicked(self):
+        frame = QFileDialog.getOpenFileName(self, 'Open Private Key PEM File', 'c:\\', "PEM Files (*.pem)")
+        self.importPathForPRInputText.setText(frame[0])
+
+
+    def importKeyTypePrivateClicked(self):
+        if(self.importKeyTypePrivateRadioButton.isChecked() == True):
+            self.importPathForPRInputText.setDisabled(False)
+            self.importPathForPRInputText.setStyleSheet("")
+            self.importPathForPRLabel.setStyleSheet("")
+            self.importBrowseForPRButton.setDisabled(False)
+            self.importBrowseForPRButton.setStyleSheet("")
+        else:
+            self.importPathForPRInputText.setDisabled(True)
+            self.importPathForPRInputText.setStyleSheet("QTextEdit { background-color: #a3a3a3; }")
+            self.importPathForPRLabel.setStyleSheet("QLabel { color: #a3a3a3; }")
+            self.importBrowseForPRButton.setDisabled(True)
+            self.importBrowseForPRButton.setStyleSheet("QPushButton { background-color: #a3a3a3; }")
+
+    def importKeyTypePublicClicked(self):
+        if(self.importKeyTypePublicRadioButton.isChecked() == True):
+            self.importPathForPRInputText.setDisabled(True)
+            self.importPathForPRInputText.setStyleSheet("QTextEdit { background-color: #a3a3a3; }")
+            self.importPathForPRLabel.setStyleSheet("QLabel { color: #a3a3a3; }")
+            self.importBrowseForPRButton.setDisabled(True)
+            self.importBrowseForPRButton.setStyleSheet("QPushButton { background-color: #a3a3a3; }")
+        else:
+            self.importPathForPRInputText.setDisabled(False)
+            self.importPathForPRInputText.setStyleSheet("")
+            self.importPathForPRLabel.setStyleSheet("")
+            self.importBrowseForPRButton.setDisabled(False)
+            self.importBrowseForPRButton.setStyleSheet("")
 
 
 if __name__ == "__main__":
@@ -24,5 +260,5 @@ if __name__ == "__main__":
     widget = QtWidgets.QStackedWidget()
     widget.addWidget(mainWindow)
     widget.show()
-    widget.setFixedSize(800, 500)
+    widget.setFixedSize(780, 690)
     sys.exit(app.exec_())

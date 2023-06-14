@@ -6,38 +6,107 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>783</width>
-    <height>573</height>
+    <width>775</width>
+    <height>678</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+	background-color:#dbd5c3;
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>0</x>
       <y>70</y>
-      <width>751</width>
-      <height>481</height>
+      <width>791</width>
+      <height>621</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
+      <underline>false</underline>
+      <kerning>true</kerning>
+     </font>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QTabBar::tab {
+  background: #8d6535;
+  color: white;
+  padding: 8px;
+  border-left: 1px solid black;
+  border-top: 1px solid black;
+ }
+
+QTabBar::tab:last {
+  border-right: 1px solid black;
+ }
+
+ QTabBar::tab:selected {
+  background: #404319;
+  color: white;
+ }
+
+QTabWidget::pane { 
+   border: 1px solid black;
+    background-color: #8d6535;
+}
+
+QLabel {
+	color: white;
+}
+
+QRadioButton {
+	color: white;
+}
+
+QCheckBox {
+	color: white;
+}
+
+QPushButton {
+	background-color: #dbd5c3;
+}
+
+QTextEdit {
+	background-color: #dbd5c3;
+}</string>
+    </property>
+    <property name="tabShape">
+     <enum>QTabWidget::Rounded</enum>
+    </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>0</number>
+    </property>
+    <property name="documentMode">
+     <bool>false</bool>
     </property>
     <property name="movable">
      <bool>true</bool>
+    </property>
+    <property name="tabBarAutoHide">
+     <bool>false</bool>
     </property>
     <widget class="QWidget" name="generateKeysTab">
      <attribute name="title">
       <string>Generate Keys</string>
      </attribute>
-     <widget class="QLabel" name="label">
+     <widget class="QLabel" name="generateNameLabel">
       <property name="geometry">
        <rect>
-        <x>100</x>
-        <y>80</y>
+        <x>220</x>
+        <y>110</y>
         <width>61</width>
         <height>31</height>
        </rect>
@@ -46,17 +115,25 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>Name:</string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_2">
+     <widget class="QLabel" name="generateEmailLabel">
       <property name="geometry">
        <rect>
-        <x>90</x>
-        <y>140</y>
+        <x>210</x>
+        <y>170</y>
         <width>71</width>
         <height>31</height>
        </rect>
@@ -65,6 +142,11 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
@@ -74,11 +156,11 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QLabel" name="label_3">
+     <widget class="QLabel" name="generateAlgorithmLabel">
       <property name="geometry">
        <rect>
-        <x>60</x>
-        <y>190</y>
+        <x>180</x>
+        <y>250</y>
         <width>101</width>
         <height>41</height>
        </rect>
@@ -87,6 +169,11 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="layoutDirection">
@@ -99,11 +186,11 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QRadioButton" name="radioButton">
+     <widget class="QRadioButton" name="generateRSARadioButton">
       <property name="geometry">
        <rect>
-        <x>170</x>
-        <y>190</y>
+        <x>290</x>
+        <y>250</y>
         <width>81</width>
         <height>41</height>
        </rect>
@@ -111,6 +198,11 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
@@ -120,11 +212,11 @@
        <string notr="true">algorithmGroup</string>
       </attribute>
      </widget>
-     <widget class="QRadioButton" name="radioButton_2">
+     <widget class="QRadioButton" name="generateDSAElGamalRadioButton">
       <property name="geometry">
        <rect>
-        <x>250</x>
-        <y>190</y>
+        <x>370</x>
+        <y>250</y>
         <width>191</width>
         <height>41</height>
        </rect>
@@ -132,6 +224,11 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
@@ -141,11 +238,11 @@
        <string notr="true">algorithmGroup</string>
       </attribute>
      </widget>
-     <widget class="QLabel" name="label_4">
+     <widget class="QLabel" name="generateKeySizeLabel">
       <property name="geometry">
        <rect>
-        <x>70</x>
-        <y>240</y>
+        <x>190</x>
+        <y>300</y>
         <width>91</width>
         <height>41</height>
        </rect>
@@ -154,6 +251,11 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
@@ -163,11 +265,11 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QRadioButton" name="radioButton_3">
+     <widget class="QRadioButton" name="generateKeysize2048RadioButton">
       <property name="geometry">
        <rect>
-        <x>250</x>
-        <y>240</y>
+        <x>370</x>
+        <y>300</y>
         <width>101</width>
         <height>41</height>
        </rect>
@@ -175,6 +277,11 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
@@ -184,11 +291,11 @@
        <string notr="true">keySizeGroup</string>
       </attribute>
      </widget>
-     <widget class="QRadioButton" name="radioButton_4">
+     <widget class="QRadioButton" name="generateKeySize1024RadioButton">
       <property name="geometry">
        <rect>
-        <x>170</x>
-        <y>240</y>
+        <x>290</x>
+        <y>300</y>
         <width>81</width>
         <height>41</height>
        </rect>
@@ -196,6 +303,11 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
@@ -205,11 +317,11 @@
        <string notr="true">keySizeGroup</string>
       </attribute>
      </widget>
-     <widget class="QLabel" name="label_5">
+     <widget class="QLabel" name="generatePasswordLabel">
       <property name="geometry">
        <rect>
-        <x>60</x>
-        <y>310</y>
+        <x>180</x>
+        <y>380</y>
         <width>101</width>
         <height>31</height>
        </rect>
@@ -218,6 +330,11 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
@@ -227,11 +344,11 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="generateButton">
       <property name="geometry">
        <rect>
-        <x>300</x>
-        <y>370</y>
+        <x>320</x>
+        <y>460</y>
         <width>131</width>
         <height>51</height>
        </rect>
@@ -240,17 +357,25 @@
        <font>
         <family>Arial</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>Generate</string>
       </property>
      </widget>
-     <widget class="QTextEdit" name="textEdit">
+     <widget class="QTextEdit" name="generatePasswordInputText">
       <property name="geometry">
        <rect>
-        <x>170</x>
-        <y>310</y>
+        <x>290</x>
+        <y>380</y>
         <width>221</width>
         <height>31</height>
        </rect>
@@ -258,14 +383,22 @@
       <property name="font">
        <font>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
       </property>
      </widget>
-     <widget class="QTextEdit" name="textEdit_2">
+     <widget class="QTextEdit" name="generateNameInputText">
       <property name="geometry">
        <rect>
-        <x>170</x>
-        <y>80</y>
+        <x>290</x>
+        <y>110</y>
         <width>221</width>
         <height>31</height>
        </rect>
@@ -273,14 +406,22 @@
       <property name="font">
        <font>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
       </property>
      </widget>
-     <widget class="QTextEdit" name="textEdit_3">
+     <widget class="QTextEdit" name="generateEmailInputText">
       <property name="geometry">
        <rect>
-        <x>170</x>
-        <y>140</y>
+        <x>290</x>
+        <y>170</y>
         <width>221</width>
         <height>31</height>
        </rect>
@@ -288,7 +429,61 @@
       <property name="font">
        <font>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+     </widget>
+     <widget class="QLabel" name="generateKeysLabel">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>781</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>20</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>Generate Keys</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="generateErrorLabel">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>520</y>
+        <width>781</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </widget>
@@ -296,13 +491,13 @@
      <attribute name="title">
       <string>Public KeyRing</string>
      </attribute>
-     <widget class="QTableWidget" name="tableWidget">
+     <widget class="QTableWidget" name="publicKeyRingTable">
       <property name="geometry">
        <rect>
         <x>10</x>
         <y>70</y>
-        <width>721</width>
-        <height>371</height>
+        <width>761</width>
+        <height>501</height>
        </rect>
       </property>
       <column>
@@ -338,19 +533,43 @@
         </font>
        </property>
       </column>
+     </widget>
+     <widget class="QLabel" name="publicKeyRingLabel">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>781</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>20</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>Public KeyRing</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="privateKeyRingTab">
      <attribute name="title">
       <string>Private KeyRing</string>
      </attribute>
-     <widget class="QTableWidget" name="tableWidget_2">
+     <widget class="QTableWidget" name="privateKeyRingTable">
       <property name="geometry">
        <rect>
         <x>10</x>
         <y>70</y>
-        <width>721</width>
-        <height>371</height>
+        <width>761</width>
+        <height>501</height>
        </rect>
       </property>
       <column>
@@ -387,16 +606,40 @@
        </property>
       </column>
      </widget>
+     <widget class="QLabel" name="privateKeyRingLabel">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>781</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>20</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>Private KeyRing</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="sendMessageTab">
      <attribute name="title">
       <string>Send Message</string>
      </attribute>
-     <widget class="QTextEdit" name="textEdit_7">
+     <widget class="QTextEdit" name="sendMessageInputText">
       <property name="geometry">
        <rect>
-        <x>190</x>
-        <y>80</y>
+        <x>310</x>
+        <y>70</y>
         <width>221</width>
         <height>31</height>
        </rect>
@@ -404,14 +647,19 @@
       <property name="font">
        <font>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
      </widget>
-     <widget class="QLabel" name="label_12">
+     <widget class="QLabel" name="sendMessageLabel2">
       <property name="geometry">
        <rect>
-        <x>90</x>
-        <y>80</y>
+        <x>210</x>
+        <y>70</y>
         <width>91</width>
         <height>31</height>
        </rect>
@@ -420,16 +668,21 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Message:</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox">
+     <widget class="QCheckBox" name="sendSignCheckBox">
       <property name="geometry">
        <rect>
-        <x>90</x>
+        <x>210</x>
         <y>130</y>
         <width>61</width>
         <height>31</height>
@@ -438,17 +691,22 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Sign</string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_13">
+     <widget class="QLabel" name="sendPrivateIDSignLabel">
       <property name="geometry">
        <rect>
-        <x>170</x>
-        <y>130</y>
+        <x>210</x>
+        <y>170</y>
         <width>91</width>
         <height>31</height>
        </rect>
@@ -457,17 +715,22 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Private ID:</string>
       </property>
      </widget>
-     <widget class="QTextEdit" name="textEdit_8">
+     <widget class="QTextEdit" name="sendSignPrivateIDInput">
       <property name="geometry">
        <rect>
-        <x>270</x>
-        <y>130</y>
+        <x>310</x>
+        <y>170</y>
         <width>221</width>
         <height>31</height>
        </rect>
@@ -475,14 +738,22 @@
       <property name="font">
        <font>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_2">
+     <widget class="QCheckBox" name="sendCompressCheckBox">
       <property name="geometry">
        <rect>
-        <x>90</x>
-        <y>180</y>
+        <x>210</x>
+        <y>230</y>
         <width>111</width>
         <height>31</height>
        </rect>
@@ -490,17 +761,22 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Compress</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_3">
+     <widget class="QCheckBox" name="sendEncryptCheckBox">
       <property name="geometry">
        <rect>
-        <x>90</x>
-        <y>230</y>
+        <x>210</x>
+        <y>280</y>
         <width>91</width>
         <height>31</height>
        </rect>
@@ -508,17 +784,22 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Encrypt</string>
       </property>
      </widget>
-     <widget class="QTextEdit" name="textEdit_9">
+     <widget class="QTextEdit" name="sendEncryptPublicIDInputText">
       <property name="geometry">
        <rect>
-        <x>440</x>
-        <y>230</y>
+        <x>310</x>
+        <y>320</y>
         <width>221</width>
         <height>31</height>
        </rect>
@@ -526,14 +807,19 @@
       <property name="font">
        <font>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
      </widget>
-     <widget class="QLabel" name="label_14">
+     <widget class="QLabel" name="sendPublicIDEncryptLabel">
       <property name="geometry">
        <rect>
-        <x>340</x>
-        <y>230</y>
+        <x>210</x>
+        <y>320</y>
         <width>91</width>
         <height>31</height>
        </rect>
@@ -542,17 +828,22 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Public ID:</string>
       </property>
      </widget>
-     <widget class="QRadioButton" name="radioButton_9">
+     <widget class="QRadioButton" name="send3DESRadioButton">
       <property name="geometry">
        <rect>
-        <x>190</x>
-        <y>230</y>
+        <x>350</x>
+        <y>280</y>
         <width>71</width>
         <height>31</height>
        </rect>
@@ -560,17 +851,22 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>3DES</string>
       </property>
      </widget>
-     <widget class="QRadioButton" name="radioButton_10">
+     <widget class="QRadioButton" name="sendAESRadioButton">
       <property name="geometry">
        <rect>
-        <x>270</x>
-        <y>230</y>
+        <x>430</x>
+        <y>280</y>
         <width>61</width>
         <height>31</height>
        </rect>
@@ -578,17 +874,22 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>AES</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_4">
+     <widget class="QCheckBox" name="sendRadixCheckBox">
       <property name="geometry">
        <rect>
-        <x>90</x>
-        <y>280</y>
+        <x>210</x>
+        <y>380</y>
         <width>171</width>
         <height>31</height>
        </rect>
@@ -596,17 +897,22 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Convert to Radix</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_7">
+     <widget class="QPushButton" name="sendButton">
       <property name="geometry">
        <rect>
-        <x>270</x>
-        <y>330</y>
+        <x>320</x>
+        <y>480</y>
         <width>121</width>
         <height>41</height>
        </rect>
@@ -614,42 +920,48 @@
       <property name="font">
        <font>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Send</string>
       </property>
      </widget>
-    </widget>
-    <widget class="QWidget" name="receiveMessageTab">
-     <attribute name="title">
-      <string>Receive Message</string>
-     </attribute>
-     <widget class="QPushButton" name="pushButton_2">
+     <widget class="QLabel" name="sendMessageLabel">
       <property name="geometry">
        <rect>
-        <x>510</x>
-        <y>90</y>
-        <width>81</width>
-        <height>31</height>
+        <x>0</x>
+        <y>10</y>
+        <width>781</width>
+        <height>51</height>
        </rect>
       </property>
       <property name="font">
        <font>
-        <pointsize>10</pointsize>
+        <pointsize>20</pointsize>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
       <property name="text">
-       <string>Browse..</string>
+       <string>Send Message</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel" name="label_6">
+     <widget class="QLabel" name="sendErrorLabel">
       <property name="geometry">
        <rect>
-        <x>350</x>
-        <y>40</y>
-        <width>51</width>
-        <height>31</height>
+        <x>0</x>
+        <y>540</y>
+        <width>781</width>
+        <height>41</height>
        </rect>
       </property>
       <property name="font">
@@ -659,26 +971,118 @@
        </font>
       </property>
       <property name="text">
-       <string>Path:</string>
+       <string/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QTextEdit" name="textEdit_4">
+     <widget class="QLabel" name="sendFilenameLabel">
       <property name="geometry">
        <rect>
-        <x>130</x>
-        <y>90</y>
-        <width>371</width>
+        <x>210</x>
+        <y>430</y>
+        <width>91</width>
         <height>31</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
+       </font>
+      </property>
+      <property name="text">
+       <string>Filename:</string>
+      </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_3">
+     <widget class="QTextEdit" name="sendFilenameInputText">
       <property name="geometry">
        <rect>
         <x>310</x>
-        <y>150</y>
-        <width>121</width>
-        <height>41</height>
+        <y>430</y>
+        <width>221</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
+       </font>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="receiveMessageTab">
+     <attribute name="title">
+      <string>Receive Message</string>
+     </attribute>
+     <widget class="QPushButton" name="receiveBrowsePathInputText">
+      <property name="geometry">
+       <rect>
+        <x>520</x>
+        <y>120</y>
+        <width>81</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
+       </font>
+      </property>
+      <property name="text">
+       <string>Browse..</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="receiveMessagePathLabel">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>70</y>
+        <width>781</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
+       </font>
+      </property>
+      <property name="text">
+       <string>Path:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QTextEdit" name="receiveMessagePathInput">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>120</y>
+        <width>331</width>
+        <height>31</height>
        </rect>
       </property>
       <property name="font">
@@ -686,25 +1090,45 @@
         <pointsize>12</pointsize>
        </font>
       </property>
+     </widget>
+     <widget class="QPushButton" name="receiveButton">
+      <property name="geometry">
+       <rect>
+        <x>330</x>
+        <y>180</y>
+        <width>121</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
+       </font>
+      </property>
       <property name="text">
        <string>Receive</string>
       </property>
      </widget>
-     <widget class="QTextBrowser" name="textBrowser">
+     <widget class="QTextBrowser" name="receivedMessageBox">
       <property name="geometry">
        <rect>
-        <x>20</x>
-        <y>250</y>
-        <width>701</width>
-        <height>191</height>
+        <x>10</x>
+        <y>270</y>
+        <width>761</width>
+        <height>301</height>
        </rect>
       </property>
      </widget>
-     <widget class="QLabel" name="label_7">
+     <widget class="QLabel" name="receivedMessageLabel">
       <property name="geometry">
        <rect>
-        <x>20</x>
-        <y>210</y>
+        <x>10</x>
+        <y>230</y>
         <width>211</width>
         <height>31</height>
        </rect>
@@ -713,10 +1137,39 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Received Message:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="receiveMessageLabel">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>781</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>20</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>Receive Message</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </widget>
@@ -724,11 +1177,11 @@
      <attribute name="title">
       <string>Import</string>
      </attribute>
-     <widget class="QLabel" name="label_8">
+     <widget class="QLabel" name="importKeyTypeLabel">
       <property name="geometry">
        <rect>
-        <x>60</x>
-        <y>50</y>
+        <x>100</x>
+        <y>130</y>
         <width>91</width>
         <height>31</height>
        </rect>
@@ -737,6 +1190,11 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
@@ -746,11 +1204,11 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QRadioButton" name="radioButton_5">
+     <widget class="QRadioButton" name="importKeyTypePrivateRadioButton">
       <property name="geometry">
        <rect>
-        <x>160</x>
-        <y>50</y>
+        <x>200</x>
+        <y>130</y>
         <width>81</width>
         <height>31</height>
        </rect>
@@ -758,20 +1216,25 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Private</string>
       </property>
       <attribute name="buttonGroup">
-       <string notr="true">keyTypeImportGroup</string>
+       <string notr="true">importKeyTypeGroup</string>
       </attribute>
      </widget>
-     <widget class="QRadioButton" name="radioButton_6">
+     <widget class="QRadioButton" name="importKeyTypePublicRadioButton">
       <property name="geometry">
        <rect>
-        <x>250</x>
-        <y>50</y>
+        <x>290</x>
+        <y>130</y>
         <width>81</width>
         <height>31</height>
        </rect>
@@ -779,20 +1242,25 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Public</string>
       </property>
       <attribute name="buttonGroup">
-       <string notr="true">keyTypeImportGroup</string>
+       <string notr="true">importKeyTypeGroup</string>
       </attribute>
      </widget>
-     <widget class="QLabel" name="label_9">
+     <widget class="QLabel" name="importPathForPULabel">
       <property name="geometry">
        <rect>
-        <x>40</x>
-        <y>100</y>
+        <x>80</x>
+        <y>180</y>
         <width>111</width>
         <height>31</height>
        </rect>
@@ -801,6 +1269,11 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
@@ -810,21 +1283,26 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QTextEdit" name="textEdit_5">
+     <widget class="QTextEdit" name="importPathForPUInputText">
       <property name="geometry">
        <rect>
-        <x>160</x>
-        <y>100</y>
+        <x>200</x>
+        <y>180</y>
         <width>371</width>
         <height>31</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_4">
+     <widget class="QPushButton" name="importBrowseForPUButton">
       <property name="geometry">
        <rect>
-        <x>540</x>
-        <y>100</y>
+        <x>580</x>
+        <y>180</y>
         <width>81</width>
         <height>31</height>
        </rect>
@@ -832,17 +1310,22 @@
       <property name="font">
        <font>
         <pointsize>10</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Browse..</string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_10">
+     <widget class="QLabel" name="importPathForPRLabel">
       <property name="geometry">
        <rect>
-        <x>40</x>
-        <y>150</y>
+        <x>80</x>
+        <y>230</y>
         <width>111</width>
         <height>31</height>
        </rect>
@@ -851,6 +1334,11 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
@@ -860,11 +1348,11 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_5">
+     <widget class="QPushButton" name="importBrowseForPRButton">
       <property name="geometry">
        <rect>
-        <x>540</x>
-        <y>150</y>
+        <x>580</x>
+        <y>230</y>
         <width>81</width>
         <height>31</height>
        </rect>
@@ -872,27 +1360,37 @@
       <property name="font">
        <font>
         <pointsize>10</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Browse..</string>
       </property>
      </widget>
-     <widget class="QTextEdit" name="textEdit_6">
+     <widget class="QTextEdit" name="importPathForPRInputText">
       <property name="geometry">
        <rect>
-        <x>160</x>
-        <y>150</y>
+        <x>200</x>
+        <y>230</y>
         <width>371</width>
         <height>31</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
      </widget>
-     <widget class="QRadioButton" name="radioButton_7">
+     <widget class="QRadioButton" name="importKeyUsageEncryptionRadioButton">
       <property name="geometry">
        <rect>
-        <x>160</x>
-        <y>200</y>
+        <x>200</x>
+        <y>280</y>
         <width>111</width>
         <height>31</height>
        </rect>
@@ -900,20 +1398,25 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Encryption</string>
       </property>
       <attribute name="buttonGroup">
-       <string notr="true">keyUsageImportGroup</string>
+       <string notr="true">importKeyUsageGroup</string>
       </attribute>
      </widget>
-     <widget class="QRadioButton" name="radioButton_8">
+     <widget class="QRadioButton" name="importKeyUsageSignRadioButton">
       <property name="geometry">
        <rect>
-        <x>290</x>
-        <y>200</y>
+        <x>330</x>
+        <y>280</y>
         <width>61</width>
         <height>31</height>
        </rect>
@@ -921,20 +1424,25 @@
       <property name="font">
        <font>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Sign</string>
       </property>
       <attribute name="buttonGroup">
-       <string notr="true">keyUsageImportGroup</string>
+       <string notr="true">importKeyUsageGroup</string>
       </attribute>
      </widget>
-     <widget class="QLabel" name="label_11">
+     <widget class="QLabel" name="importKeyUsageLabel">
       <property name="geometry">
        <rect>
-        <x>50</x>
-        <y>200</y>
+        <x>90</x>
+        <y>280</y>
         <width>101</width>
         <height>31</height>
        </rect>
@@ -943,6 +1451,11 @@
        <font>
         <family>Arial</family>
         <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
@@ -952,11 +1465,11 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_6">
+     <widget class="QPushButton" name="importButton">
       <property name="geometry">
        <rect>
-        <x>290</x>
-        <y>260</y>
+        <x>330</x>
+        <y>340</y>
         <width>121</width>
         <height>41</height>
        </rect>
@@ -964,13 +1477,69 @@
       <property name="font">
        <font>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+        <underline>false</underline>
+        <kerning>true</kerning>
        </font>
       </property>
       <property name="text">
        <string>Import</string>
       </property>
      </widget>
+     <widget class="QLabel" name="ImportKeyLabel">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>781</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>20</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>Import Key</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
     </widget>
+   </widget>
+   <widget class="QLabel" name="mainPGPLabel">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>10</y>
+      <width>781</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>20</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel {
+	color: black;
+}
+</string>
+    </property>
+    <property name="text">
+     <string>PGP Message Encryption And Signing Program</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -978,7 +1547,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>783</width>
+     <width>775</width>
      <height>21</height>
     </rect>
    </property>
@@ -1002,7 +1571,7 @@
  <buttongroups>
   <buttongroup name="algorithmGroup"/>
   <buttongroup name="keySizeGroup"/>
-  <buttongroup name="keyTypeImportGroup"/>
-  <buttongroup name="keyUsageImportGroup"/>
+  <buttongroup name="importKeyUsageGroup"/>
+  <buttongroup name="importKeyTypeGroup"/>
  </buttongroups>
 </ui>
