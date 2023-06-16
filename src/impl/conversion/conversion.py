@@ -3,13 +3,13 @@ import pickle
 
 
 def encodeToRadix64(data):
-    dataBytes = pickle.dumps(data)
-    return base64.b64encode(dataBytes)
+    # dataBytes = base64.b64decode(data)  # STRING -> BYTES
+    return base64.b64encode(data.encode('utf-8')).decode('utf-8')
 
 
 def decodeFromRadix64(data):
-    dataBytes = base64.b64decode(data)
-    return pickle.loads(dataBytes)
+    #data = base64.b64encode(dataBytes).decode('utf-8')  # BYTES -> STRING
+    return base64.b64decode(data).decode('utf-8')
 
 
 

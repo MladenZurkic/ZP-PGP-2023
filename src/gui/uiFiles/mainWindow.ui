@@ -87,7 +87,7 @@ QTextEdit {
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>5</number>
     </property>
     <property name="documentMode">
      <bool>false</bool>
@@ -1521,6 +1521,28 @@ QTextEdit {
       </property>
       <property name="text">
        <string>Import Key</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="importErrorLabel">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>460</y>
+        <width>781</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string/>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>

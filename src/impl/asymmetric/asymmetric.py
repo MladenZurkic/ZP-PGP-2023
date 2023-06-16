@@ -1,4 +1,6 @@
+import base64
 import pickle
+import traceback
 
 from Crypto.Cipher import DES3
 from Crypto.Util.Padding import unpad
@@ -8,7 +10,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization, hashes
 from src.impl.asymmetric.elGamal import elGamalGenerateKeys, elGamalEncrypt, elGamalKeyToBytes, elGamalBytesToKey, \
     elGamalDecrypt
-
+from src.impl.symmetric.symmetric import SymmetricEncryptionDecryption
 
 BLOCK_SIZE = 64
 
@@ -39,7 +41,7 @@ def testElGamal():
 def signData(algorithm, privateKey, data, passphrase):
     hashedPassword = hashMD5(passphrase)
     encryptedPrivateKey = privateKey.encryptedPrivateKey
-    cipher = DES3.new(hashedPassword,DES3.MODE_ECB)
+    cipher = DES3.new(hashedPassword, DES3.MODE_ECB)
 
     decryptedPrivateKeyPadded = cipher.decrypt(encryptedPrivateKey)
 
@@ -53,7 +55,7 @@ def signData(algorithm, privateKey, data, passphrase):
     if isinstance(data, (bytes, bytearray)):
         dataBytes = data
     else:
-        dataBytes = pickle.dumps(data)
+        dataBytes = base64.b64encode(data.encode())
 
     if(algorithm.upper() == "RSA"):
         sha1Hash = hashes.Hash(hashes.SHA1())
@@ -80,6 +82,10 @@ def signData(algorithm, privateKey, data, passphrase):
             # Prosledjeni kljuc je drugacijeg tipa od algoritma koji je upisan da se koristi
             return 2, None
 
+    print("SIGNATURE PRILIKOM POTPISA:")
+    print(signature)
+    print(hashValue)
+    print(dataBytes)
     return 0, signature
 
 # Works
@@ -87,14 +93,14 @@ def verifySignedData(algorithm, data, signature, publicKey):
     if isinstance(data, (bytes, bytearray)):
         dataBytes = data
     else:
-        dataBytes = pickle.dumps(data)
+        dataBytes = base64.b64encode(data.encode())
 
     sha1Hash = hashes.Hash(hashes.SHA1())
     sha1Hash.update(dataBytes)
     hashValue = sha1Hash.finalize()
 
     # Da li cemo da prosledjujemo objekat PublicKeyringValues ili samo publicKey
-    publicKeyObject = publicKey
+    publicKeyObject = publicKey.publicKey
 
     if(algorithm.upper() == "RSA"):
         try:
@@ -105,6 +111,7 @@ def verifySignedData(algorithm, data, signature, publicKey):
                 hashes.SHA1()
             )
         except:
+            traceback.print_exc()
             return 1
     else:
         try:

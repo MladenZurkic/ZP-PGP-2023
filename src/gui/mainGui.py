@@ -1,3 +1,4 @@
+import base64
 import datetime
 import os
 import sys
@@ -44,6 +45,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.importKeyTypePublicRadioButton.clicked.connect(self.importKeyTypePublicClicked)
         self.importBrowseForPUButton.clicked.connect(self.importBrowsePUClicked)
         self.importBrowseForPRButton.clicked.connect(self.importBrowsePRClicked)
+        self.importButton.clicked.connect(self.importKeys)
 
         # Disable fileds in send tab:
         self.sendSignPrivateIDInput.setDisabled(True)
@@ -137,7 +139,34 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.receivedMessageBox.setText("")
                 return 0
             case "import":
-                pass
+                if self.importKeyTypePublicRadioButton.isChecked():
+                    if self.importPathForPUInputText.toPlainText() == "":
+                        self.importErrorLabel.setText("Path for Public Key is empty!")
+                        return -1
+                    path = self.importPathForPUInputText.toPlainText()
+                    if not os.path.exists(path):
+                        self.importErrorLabel.setText("Path for Public Key is invalid!")
+                        return -1
+                elif self.importKeyTypePrivateRadioButton.isChecked():
+                    if self.importPathForPUInputText.toPlainText() == "":
+                        self.importErrorLabel.setText("Path for Public Key is empty!")
+                        return -1
+                    PUpath = self.importPathForPUInputText.toPlainText()
+                    if not os.path.exists(PUpath):
+                        self.importErrorLabel.setText("Path for Public Key is invalid!")
+                        return -1
+
+                    if self.importPathForPRInputText.toPlainText() == "":
+                        self.importErrorLabel.setText("Path for Private Key is empty!")
+                        return -1
+                    PRpath = self.importPathForPRInputText.toPlainText()
+                    if not os.path.exists(PRpath):
+                        self.importErrorLabel.setText("Path for Private Key is invalid!")
+                        return -1
+                else:
+                    self.importErrorLabel.setText("Key Type is not selected!")
+                    return -1
+                return 0
 
     def generateKeysGUI(self):
         # Check all fields:
@@ -163,7 +192,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
             # Sign data if selected:
             if self.sendSignCheckBox.isChecked():
-
                 # Open prompt for password:
                 popup = SendPrompt()
                 if popup.exec_() == QDialog.Accepted:
@@ -180,9 +208,10 @@ class Window(QMainWindow, Ui_MainWindow):
             # Compress data if selected:
             if self.sendCompressCheckBox.isChecked():
                 operations = "C" + operations
-                data = str(compress(data))
+                data = compress(data)
+                data = base64.b64encode(data).decode('utf-8')
 
-            # Enctypt data if selected:
+            # Encrypt data if selected:
             if self.sendEncryptCheckBox.isChecked():
                 publicID = self.sendEncryptPublicIDInputText.toPlainText()
                 algorithm = "AES" if (self.sendAESRadioButton.isChecked()) else "3DES"
@@ -193,7 +222,7 @@ class Window(QMainWindow, Ui_MainWindow):
             # Convert to Radix if selected:
             if self.sendRadixCheckBox.isChecked():
                 operations = "R" + operations
-                data = str(encodeToRadix64(data))
+                data = encodeToRadix64(data)
 
             # Save to file:
             frame = QFileDialog.getSaveFileName(self, 'Save File', 'C:\\' + filename + '.txt', "Txt File (*.txt)")
@@ -201,7 +230,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.sendErrorLabel.setText("Message not saved.")
             else:
                 with open(frame[0], 'w') as f:
-                    f.write(operations + "~#~" + str(data))
+                    f.write(operations + "~#~" + data)
                 self.sendErrorLabel.setText("Saved Message at:" + frame[0])
                 self.sendErrorLabel.setStyleSheet("QLabel { color: lightgreen; }")
 
@@ -217,10 +246,18 @@ class Window(QMainWindow, Ui_MainWindow):
                 encryptedData, encryptedSessionKey, publicKeyID = data.split("~#~")
                 data = self.user.decryptData(encryptedData, encryptedSessionKey)
             if "C" in operations:
-                data = decompress(data)
+                data = decompress(base64.b64decode(data))
             if "S" in operations:
+                print("TEST")
+
                 message, timestamp, filename, signature, leadingTwoOctets, publicID, timestamp = data.split("~#~")
-                if self.user.verifySignature(message, signature, self.user.publicKeyring.getKey(int(publicID)),
+                self.user.publicKeyring.printKeyring()
+
+                publicKey = self.user.publicKeyring.getKey(int(publicID))
+                print("signature:" )
+                print(signature)
+                toVerify = message + "~#~" + timestamp + "~#~" + filename
+                if self.user.verifySignature(toVerify, signature, publicKey,
                                              self.user.privateKeyring.getKeyForSigning(int(publicID)).usedAlgorithm):
                     self.receivedMessageBox.setText("Message is verified!")
                 else:
@@ -229,6 +266,21 @@ class Window(QMainWindow, Ui_MainWindow):
                 data = message + "~#~" + timestamp + "~#~" + filename
             message, timestamp, filename = data.split("~#~")
             self.receivedMessageBox.setText(message)
+
+    def importKeys(self):
+        if self.checkFields("import") == 0:
+            if self.importKeyTypePublicRadioButton.isChecked():
+                path = self.importPathForPUInputText.toPlainText()
+                self.user.publicKeyring.importKey(path)
+            else:
+                pathPU = self.importPathForPUInputText.toPlainText()
+                pathPR = self.importPathForPRInputText.toPlainText()
+                self.user.publicKeyring.importKey(pathPU)
+                self.user.privateKeyring.importKey(pathPU, pathPR, 's' if self.importKeyUsageSignRadioButton.isChecked() else 'e')
+
+        self.user.printKeys()
+
+
     def signCheckBoxClicked(self):
         if self.sendSignCheckBox.isChecked():
             self.sendSignPrivateIDInput.setDisabled(False)
@@ -258,15 +310,15 @@ class Window(QMainWindow, Ui_MainWindow):
             self.send3DESRadioButton.setStyleSheet("QRadioButton { color: #a3a3a3; }")
 
     def receiveBrowseClicked(self):
-        frame = QFileDialog.getOpenFileName(self, 'Open Message to Read', 'c:\\', "All files (*.*)")
+        frame = QFileDialog.getOpenFileName(self, 'Open Message to Read', 'C:\\Users\\Mladen\\Desktop\\', "All files (*.*)")
         self.receiveMessagePathInput.setText(frame[0])
 
     def importBrowsePUClicked(self):
-        frame = QFileDialog.getOpenFileName(self, 'Open Public Key PEM File', 'c:\\', "PEM Files (*.pem)")
+        frame = QFileDialog.getOpenFileName(self, 'Open Public Key PEM File', 'C:\\Users\\Mladen\\Desktop\\', "PEM Files (*.pem)")
         self.importPathForPUInputText.setText(frame[0])
 
     def importBrowsePRClicked(self):
-        frame = QFileDialog.getOpenFileName(self, 'Open Private Key PEM File', 'c:\\', "PEM Files (*.pem)")
+        frame = QFileDialog.getOpenFileName(self, 'Open Private Key PEM File', 'C:\\Users\\Mladen\\Desktop\\', "PEM Files (*.pem)")
         self.importPathForPRInputText.setText(frame[0])
 
     def importKeyTypePrivateClicked(self):

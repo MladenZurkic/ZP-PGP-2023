@@ -18,6 +18,7 @@ class User:
         signingKeyID, encyptionKeyID = self.privateKeyring.generateKeys(name, email, algorithm, sizeOfKeys, password)
         
         self.publicKeyring.insertKey(self.privateKeyring.getKeyForEncryption(encyptionKeyID).publicKey, name, usedAlgorithm=algorithm)
+        self.publicKeyring.insertKey(self.privateKeyring.getKeyForSigning(signingKeyID).publicKey, name, usedAlgorithm=algorithm)
 
         print("Keys Generated! The IDs of generated keys are: ")
         print("Key for Signing: " + str(signingKeyID))
@@ -38,14 +39,14 @@ class User:
         if returnCode:
             print("ERROR: Could not Sign data!")
             return None
-        return base64.b64encode(signature).decode('utf-8')
+        return base64.b64encode(signature).decode('utf-8')  # BYTES -> STRING
 
 
     def verifySignature(self, data, signature, publicKey, algorithm):
         # key = list(user1.privateKeyring.privateKeyringSigning)
         # privateKey = user1.privateKeyring.getKeyForSigning(key[0])
         # publicKey = privateKey.publicKey
-        signature = base64.b64decode(signature)
+        signature = base64.b64decode(signature) # STRING -> BYTES
         returnCode = asymmetric.verifySignedData(algorithm, data, signature, publicKey)
         if returnCode:
             print("Signature is NOT good!")
@@ -72,56 +73,57 @@ if __name__ == '__main__':
 
     #DOES NOT WORK ANYMORE :(
     user1 = User()
-    user1.generateKeys()
+    # def generateKeys(self, name, email, algorithm, sizeOfKeys, password):
+    user1.generateKeys("Filip", "filip@gmail.com", "RSA", 1024, "sifra")
     user1.printKeys()
 
     data = "ZP Projekat 2023"
 
-    # ****** SIGNATURE PART: ******
-    signature = user1.signData(data)
-
-    # Uncomment next line if you want to intentionally change signature
-    # signature = signature.replace("A", "y")
-
-    user1.verifySignature(data, signature)
-
-    # Simulate sending data:
-    concatData = data + "~#~" + signature
-
-    # SEND concatData
-    print("SENDING..." + concatData)
-
-    # Unpack sentData
-    data, signature = concatData.split("~#~")
-
-    user1.verifySignature(data, signature)
-
-    # ****** ENCRYPTION PART: ******
-    # Mora sa Filipom, mora da se menja symmetric padding myb
-
-    encodedData, encryptedSessionKey, publicKeyID = user1.encryptData(concatData)
-
-    concatSignEncr = encodedData + "~#~" + encryptedSessionKey + "~#~" + publicKeyID
-
-    print('SENDING ENCRYPTION PART... ' + concatSignEncr)
-
-    # ****** DECRYPTION PART: ******
-
-    receivedData = concatSignEncr
-
-    decryptedData = user1.decryptData(receivedData, input('Password: '))
-
-    print('DECRYPTED DATA: ' + decryptedData)
-    assert decryptedData == concatData
-
-    # ****** IMPORT EXPORT: ******
+    # # ****** SIGNATURE PART: ******
+    # signature = user1.signData(data)
+    #
+    # # Uncomment next line if you want to intentionally change signature
+    # # signature = signature.replace("A", "y")
+    #
+    # user1.verifySignature(data, signature)
+    #
+    # # Simulate sending data:
+    # concatData = data + "~#~" + signature
+    #
+    # # SEND concatData
+    # print("SENDING..." + concatData)
+    #
+    # # Unpack sentData
+    # data, signature = concatData.split("~#~")
+    #
+    # user1.verifySignature(data, signature)
+    #
+    # # ****** ENCRYPTION PART: ******
+    # # Mora sa Filipom, mora da se menja symmetric padding myb
+    #
+    # encodedData, encryptedSessionKey, publicKeyID = user1.encryptData(concatData)
+    #
+    # concatSignEncr = encodedData + "~#~" + encryptedSessionKey + "~#~" + publicKeyID
+    #
+    # print('SENDING ENCRYPTION PART... ' + concatSignEncr)
+    #
+    # # ****** DECRYPTION PART: ******
+    #
+    # receivedData = concatSignEncr
+    #
+    # decryptedData = user1.decryptData(receivedData, input('Password: '))
+    #
+    # print('DECRYPTED DATA: ' + decryptedData)
+    # assert decryptedData == concatData
+    #
+    # # ****** IMPORT EXPORT: ******
     key = list(user1.privateKeyring.privateKeyringSigning)
     privateKey = user1.privateKeyring.getKeyForSigning(key[0])
-    publicKey = privateKey.publicKey
+    # publicKey = privateKey.publicKey
 
 
     # Ovo radi
-    # user1.privateKeyring.exportKey(privateKey.keyID, "s", "C:/Users/Mladen/Desktop/TestZPExport/")
+    user1.privateKeyring.exportKey(privateKey.keyID, "s", "C:/Users/Mladen/Desktop/TestZPExport/")
 
     # Ovo radi
     # user1.publicKeyring.importKey("C:/Users/Mladen/Desktop/TestZPExport/PU_12983771081721577473.pem")
@@ -130,3 +132,4 @@ if __name__ == '__main__':
     # Ovo radi
     # user1.privateKeyring.importKey("C:/Users/Mladen/Desktop/TestZPExport/PU_12983771081721577473.pem", "C:/Users/Mladen/Desktop/TestZPExport/PR_12983771081721577473.pem", "s")
     # user1.privateKeyring.printKeyring("SIGNING")
+

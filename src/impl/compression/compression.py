@@ -1,7 +1,6 @@
 import pickle
 import zlib
 
-
 def compress(data):
     dataBytes = pickle.dumps(data)
     return zlib.compress(dataBytes)
