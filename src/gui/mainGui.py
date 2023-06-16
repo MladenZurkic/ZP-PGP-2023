@@ -1,4 +1,5 @@
 import datetime
+import os
 import sys
 import time
 
@@ -9,6 +10,7 @@ from src.gui.pyFiles.sendPrompt import Ui_Dialog
 from src.impl.user import User
 from src.impl.compression.compression import compress, decompress
 from src.impl.conversion.conversion import decodeFromRadix64, encodeToRadix64
+
 
 class SendPrompt(QDialog, Ui_Dialog):
     def __init__(self, parent=None):
@@ -23,12 +25,13 @@ class SendPrompt(QDialog, Ui_Dialog):
     def buttonCancel(self):
         self.reject()
 
-class Window(QMainWindow, Ui_MainWindow):
 
+class Window(QMainWindow, Ui_MainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
+
 
         self.generateButton.clicked.connect(self.generateKeysGUI)
         self.sendSignCheckBox.clicked.connect(self.signCheckBoxClicked)
@@ -42,7 +45,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.importBrowseForPUButton.clicked.connect(self.importBrowsePUClicked)
         self.importBrowseForPRButton.clicked.connect(self.importBrowsePRClicked)
 
-        #Disable fileds in send tab:
+        # Disable fileds in send tab:
         self.sendSignPrivateIDInput.setDisabled(True)
         self.sendSignPrivateIDInput.setStyleSheet("QTextEdit { background-color: #a3a3a3; }")
         self.sendPrivateIDSignLabel.setStyleSheet("QLabel { color: #a3a3a3; }")
@@ -55,7 +58,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sendAESRadioButton.setStyleSheet("QRadioButton { color: #a3a3a3; }")
         self.send3DESRadioButton.setStyleSheet("QRadioButton { color: #a3a3a3; }")
 
-        #Disable fields in import tab:
+
+        self.receiveButton.clicked.connect(self.receiveMessage)
+        # Disable fields in import tab:
         self.importPathForPRInputText.setDisabled(True)
         self.importPathForPRInputText.setStyleSheet("QTextEdit { background-color: #a3a3a3; }")
         self.importPathForPRLabel.setStyleSheet("QLabel { color: #a3a3a3; }")
@@ -71,119 +76,161 @@ class Window(QMainWindow, Ui_MainWindow):
         match forWhat:
             case "generateKeys":
                 self.generateErrorLabel.setStyleSheet("QLabel { color: red; }")
-                if (self.generateNameInputText.toPlainText() == ""):
+                if self.generateNameInputText.toPlainText() == "":
                     self.generateErrorLabel.setText("Name is empty!")
-                    return -1;
+                    return -1
 
-                if (self.generateEmailInputText.toPlainText() == ""):
+                if self.generateEmailInputText.toPlainText() == "":
                     self.generateErrorLabel.setText("Email is empty!")
-                    return -1;
+                    return -1
 
                 if not (self.generateRSARadioButton.isChecked() or self.generateDSAElGamalRadioButton.isChecked()):
                     self.generateErrorLabel.setText("Algorithm is not selected!")
-                    return -1;
+                    return -1
 
-                if not (self.generateKeySize1024RadioButton.isChecked() or self.generateKeysize2048RadioButton.isChecked()):
+                if not (
+                        self.generateKeySize1024RadioButton.isChecked() or self.generateKeysize2048RadioButton.isChecked()):
                     self.generateErrorLabel.setText("Key Size is not selected!")
-                    return -1;
+                    return -1
 
-                if (self.generatePasswordInputText.toPlainText() == ""):
+                if self.generatePasswordInputText.toPlainText() == "":
                     self.generateErrorLabel.setText("Password is empty!")
-                    return -1;
-                return 0;
+                    return -1
+                return 0
 
             case "send":
                 self.sendErrorLabel.setStyleSheet("QLabel { color: red; }")
-                if(self.sendMessageInputText.toPlainText() == ""):
+                if self.sendMessageInputText.toPlainText() == "":
                     self.sendErrorLabel.setText("Message is empty!")
-                    return -1;
+                    return -1
 
-                if(self.sendSignCheckBox.isChecked() == True):
-                    if(self.sendSignPrivateIDInput.toPlainText() == ""):
+                if self.sendSignCheckBox.isChecked():
+                    if self.sendSignPrivateIDInput.toPlainText() == "":
                         self.sendErrorLabel.setText("Private ID for Signing is empty!")
-                        return -1;
+                        return -1
 
-                if(self.sendEncryptCheckBox.isChecked() == True):
+                if self.sendEncryptCheckBox.isChecked():
                     if not (self.sendAESRadioButton.isChecked() or self.send3DESRadioButton.isChecked()):
                         self.sendErrorLabel.setText("Algorithm is not selected!")
-                        return -1;
+                        return -1
 
-                    if(self.sendEncryptPublicIDInputText.toPlainText() == ""):
+                    if self.sendEncryptPublicIDInputText.toPlainText() == "":
                         self.sendErrorLabel.setText("Public ID for Encryption is empty!")
-                        return -1;
-                if(self.sendFilenameInputText.toPlainText() == ""):
+                        return -1
+                if self.sendFilenameInputText.toPlainText() == "":
                     self.sendErrorLabel.setText("Filename is empty!")
-                    return -1;
-                return 0;
+                    return -1
+                return 0
             case "receive":
-                pass
+                self.receivedMessageBox.setStyleSheet("color: red;")
+                if self.receiveMessagePathInput.toPlainText() == "":
+                    self.receivedMessageBox.setText("Message Path is empty!")
+                    return -1
 
+                path = self.receiveMessagePathInput.toPlainText()
+
+                if not os.path.exists(path):
+                    self.receivedMessageBox.setText("Message Path is invalid!")
+                    return -1
+
+                self.receivedMessageBox.setStyleSheet("color: black;")
+                self.receivedMessageBox.setText("")
+                return 0
             case "import":
                 pass
 
     def generateKeysGUI(self):
-        #Check all fields:
-        if(self.checkFields("generateKeys") == 0):
+        # Check all fields:
+        if self.checkFields("generateKeys") == 0:
             self.generateErrorLabel.setText("Key Generated!")
-            self.generateErrorLabel.setStyleSheet("QLabel { color: green; }")
+            self.generateErrorLabel.setStyleSheet("QLabel { color: lightgreen; }")
             name = self.generateNameInputText.toPlainText()
             email = self.generateEmailInputText.toPlainText()
-            algorithm = "RSA" if(self.generateRSARadioButton.isChecked()) else "DSA+ElGamal"
-            keySize = 1024 if(self.generateKeySize1024RadioButton.isChecked()) else 2048
+            algorithm = "RSA" if (self.generateRSARadioButton.isChecked()) else "DSA+ElGamal"
+            keySize = 1024 if (self.generateKeySize1024RadioButton.isChecked()) else 2048
             password = self.generatePasswordInputText.toPlainText()
             self.user.generateKeys(name, email, algorithm, keySize, password)
             self.user.printKeys()
 
     def sendMessage(self):
-        if(self.checkFields("send") == 0):
+        if self.checkFields("send") == 0:
             message = self.sendMessageInputText.toPlainText()
             timestamp = time.time()
             filename = self.sendFilenameInputText.toPlainText()
 
             data = message + "~#~" + str(timestamp) + "~#~" + filename
+            operations = "M"
 
-            #Open prompt for password:
-            popup = SendPrompt()
-            if(popup.exec_() == QDialog.Accepted):
-                password = popup.passwordInputText.toPlainText()
-            else:
-                self.sendErrorLabel.setText("Password not entered or not correct!")
-                return -1;
+            # Sign data if selected:
+            if self.sendSignCheckBox.isChecked():
 
-            #Sign data if selected:
-            if(self.sendSignCheckBox.isChecked() == True):
+                # Open prompt for password:
+                popup = SendPrompt()
+                if popup.exec_() == QDialog.Accepted:
+                    password = popup.passwordInputText.toPlainText()
+                else:
+                    self.sendErrorLabel.setText("Password not entered or not correct!")
+                    return -1
+
                 privateID = self.sendSignPrivateIDInput.toPlainText()
-                signature = self.user.signData(data, privateID, password)
-                data = data + "~#~" + signature + "~#~" + "LEADING TWO OCTETS?" + "~#~" + self.user.privateKeyring.getKeyID(privateID) + "~#~" + timestamp
+                signature = self.user.signData(data, int(privateID), password)
+                operations = "S" + operations
+                data = data + "~#~" + signature + "~#~" + "LEADING TWO OCTETS?" + "~#~" + privateID + "~#~" + str(timestamp)
 
-            #Compress data if selected:
-            if(self.sendCompressCheckBox.isChecked() == True):
-                data = compress(data)
+            # Compress data if selected:
+            if self.sendCompressCheckBox.isChecked():
+                operations = "C" + operations
+                data = str(compress(data))
 
-            #Enctypt data if selected:
-            if(self.sendEncryptCheckBox.isChecked() == True):
+            # Enctypt data if selected:
+            if self.sendEncryptCheckBox.isChecked():
                 publicID = self.sendEncryptPublicIDInputText.toPlainText()
-                algorithm = "AES" if(self.sendAESRadioButton.isChecked()) else "3DES"
-                encryptedData, encryptedSessionKey, publicKeyID = self.user.encryptData(data, publicID, algorithm)
+                algorithm = "AES" if (self.sendAESRadioButton.isChecked()) else "3DES"
+                encryptedData, encryptedSessionKey, publicKeyID = self.user.encryptData(data, int(publicID), algorithm)
+                operations = "E" + operations
                 data = encryptedData + "~#~" + encryptedSessionKey + "~#~" + publicKeyID
 
-            #Convert to Radix if selected:
-            if(self.sendRadixCheckBox.isChecked() == True):
-                data = encodeToRadix64(data)
+            # Convert to Radix if selected:
+            if self.sendRadixCheckBox.isChecked():
+                operations = "R" + operations
+                data = str(encodeToRadix64(data))
 
-            #Save to file:
-            frame = QFileDialog.getSaveFileName(self, 'Save File', 'C:\\'+filename+'.txt', "Txt File (*.txt)")
-            if(frame[0] == ""):
+            # Save to file:
+            frame = QFileDialog.getSaveFileName(self, 'Save File', 'C:\\' + filename + '.txt', "Txt File (*.txt)")
+            if (frame[0] == ""):
                 self.sendErrorLabel.setText("Message not saved.")
             else:
                 with open(frame[0], 'w') as f:
-                    f.write(data)
+                    f.write(operations + "~#~" + str(data))
                 self.sendErrorLabel.setText("Saved Message at:" + frame[0])
-                self.sendErrorLabel.setStyleSheet("QLabel { color: green; }")
+                self.sendErrorLabel.setStyleSheet("QLabel { color: lightgreen; }")
 
 
+    def receiveMessage(self):
+        if self.checkFields("receive") == 0:
+            with open(self.receiveMessagePathInput.toPlainText(), 'r') as f:
+                data = f.read()
+            operations, data = data.split("~#~", 1)
+            if "R" in operations:
+                data = decodeFromRadix64(data)
+            if "E" in operations:
+                encryptedData, encryptedSessionKey, publicKeyID = data.split("~#~")
+                data = self.user.decryptData(encryptedData, encryptedSessionKey)
+            if "C" in operations:
+                data = decompress(data)
+            if "S" in operations:
+                message, timestamp, filename, signature, leadingTwoOctets, publicID, timestamp = data.split("~#~")
+                if self.user.verifySignature(message, signature, self.user.publicKeyring.getKey(int(publicID)),
+                                             self.user.privateKeyring.getKeyForSigning(int(publicID)).usedAlgorithm):
+                    self.receivedMessageBox.setText("Message is verified!")
+                else:
+                    self.receivedMessageBox.setStyleSheet("color: red;")
+                    self.receivedMessageBox.setText("Message is not verified!")
+                data = message + "~#~" + timestamp + "~#~" + filename
+            message, timestamp, filename = data.split("~#~")
+            self.receivedMessageBox.setText(message)
     def signCheckBoxClicked(self):
-        if(self.sendSignCheckBox.isChecked() == True):
+        if self.sendSignCheckBox.isChecked():
             self.sendSignPrivateIDInput.setDisabled(False)
             self.sendSignPrivateIDInput.setStyleSheet("")
             self.sendPrivateIDSignLabel.setStyleSheet("")
@@ -192,9 +239,8 @@ class Window(QMainWindow, Ui_MainWindow):
             self.sendSignPrivateIDInput.setStyleSheet("QTextEdit { background-color: #a3a3a3; }")
             self.sendPrivateIDSignLabel.setStyleSheet("QLabel { color: #a3a3a3; }")
 
-
     def encryptCheckBoxClicked(self):
-        if(self.sendEncryptCheckBox.isChecked() == True):
+        if self.sendEncryptCheckBox.isChecked():
             self.sendAESRadioButton.setDisabled(False)
             self.send3DESRadioButton.setDisabled(False)
             self.sendEncryptPublicIDInputText.setDisabled(False)
@@ -223,9 +269,8 @@ class Window(QMainWindow, Ui_MainWindow):
         frame = QFileDialog.getOpenFileName(self, 'Open Private Key PEM File', 'c:\\', "PEM Files (*.pem)")
         self.importPathForPRInputText.setText(frame[0])
 
-
     def importKeyTypePrivateClicked(self):
-        if(self.importKeyTypePrivateRadioButton.isChecked() == True):
+        if self.importKeyTypePrivateRadioButton.isChecked():
             self.importPathForPRInputText.setDisabled(False)
             self.importPathForPRInputText.setStyleSheet("")
             self.importPathForPRLabel.setStyleSheet("")
@@ -239,7 +284,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.importBrowseForPRButton.setStyleSheet("QPushButton { background-color: #a3a3a3; }")
 
     def importKeyTypePublicClicked(self):
-        if(self.importKeyTypePublicRadioButton.isChecked() == True):
+        if self.importKeyTypePublicRadioButton.isChecked():
             self.importPathForPRInputText.setDisabled(True)
             self.importPathForPRInputText.setStyleSheet("QTextEdit { background-color: #a3a3a3; }")
             self.importPathForPRLabel.setStyleSheet("QLabel { color: #a3a3a3; }")

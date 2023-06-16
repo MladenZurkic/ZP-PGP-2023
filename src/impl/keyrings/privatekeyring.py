@@ -289,11 +289,19 @@ class PrivateKeyring:
 
 if __name__ == '__main__':
     pk = PrivateKeyring()
-    pk.generateKeys("Mladen", "mladen@gmail.com", "RSA11", 2048, "FilipMladen123")
+    signingKeyID, encyptionKeyID = pk.generateKeys("Mladen", "mladen@gmail.com", "RSA", 2048, "FilipMladen123")
 
+    print("Keys Generated! The IDs of generated keys are: ")
+    print("Key for Signing: " + str(signingKeyID))
+    print("Key for Encyption: " + str(encyptionKeyID))
     #Get Key
     key = list(pk.privateKeyringSigning)
-    privateKey = pk.getKeyForSigning(key[0])
+    print(type(key[0]))
+    #Input
+
+    keyIDSigningTest = input("Ubaci keyID za Signing:")
+    print(type(keyIDSigningTest))
+    privateKey = pk.getKeyForSigning(keyIDSigningTest)
 
     # #Print UserID
     # print(privateKey.userID)

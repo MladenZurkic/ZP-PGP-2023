@@ -13,6 +13,15 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QPushButton {
+	background-color: #dbd5c3;
+}
+QDialog { 
+   border: 1px solid black;
+    background-color: #8d6535;
+}</string>
+  </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
@@ -35,7 +44,7 @@
      <x>90</x>
      <y>80</y>
      <width>221</width>
-     <height>31</height>
+     <height>41</height>
     </rect>
    </property>
    <property name="font">
@@ -68,6 +77,11 @@
      <underline>false</underline>
      <kerning>true</kerning>
     </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {
+	color: white;
+}</string>
    </property>
    <property name="text">
     <string>Enter Password for Private Key:</string>

@@ -41,12 +41,12 @@ class User:
         return base64.b64encode(signature).decode('utf-8')
 
 
-    def verifySignature(self, data, signature):
-        key = list(user1.privateKeyring.privateKeyringSigning)
-        privateKey = user1.privateKeyring.getKeyForSigning(key[0])
-        publicKey = privateKey.publicKey
+    def verifySignature(self, data, signature, publicKey, algorithm):
+        # key = list(user1.privateKeyring.privateKeyringSigning)
+        # privateKey = user1.privateKeyring.getKeyForSigning(key[0])
+        # publicKey = privateKey.publicKey
         signature = base64.b64decode(signature)
-        returnCode = asymmetric.verifySignedData(privateKey.usedAlgorithm, data, signature, publicKey)
+        returnCode = asymmetric.verifySignedData(algorithm, data, signature, publicKey)
         if returnCode:
             print("Signature is NOT good!")
             return
