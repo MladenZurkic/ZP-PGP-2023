@@ -458,7 +458,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 pathPR = self.importPathForPRInputText.toPlainText()
                 publicKeyID = self.user.publicKeyring.importKey(pathPU)
                 usage = "Signing" if self.importKeyUsageSignRadioButton.isChecked() else "Encryption"
-                privateKeyID = self.user.privateKeyring.importKey(pathPU, pathPR, usage)
+                privateKeyID = self.user.privateKeyring.importKey(pathPU, pathPR)
 
                 self.addRowToPrivateKeyRingTable(privateKeyID, usage)
                 self.addRowToPublicKeyRingTable(publicKeyID)

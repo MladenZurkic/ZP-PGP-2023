@@ -74,7 +74,7 @@ class PrivateKeyring:
                 # Public key is ElGamal
                 publicKeyInPEM = f"-----BEGIN PUBLIC KEY-----\n{elGamalKeyToBase64(keyToExport.publicKey)}\n-----END PUBLIC KEY-----"
 
-            outputDataPU = keyToExport.userID + "~" + keyToExport.usedAlgorithm + "~" + publicKeyInPEM
+            outputDataPU = keyToExport.userID + "~#~" + keyToExport.usedAlgorithm + "~#~" + publicKeyInPEM
             if not PATH:
                 filenamePU = f'{PEM_FOLDER}PU_{keyToExport.keyID}.pem'
             else:
@@ -85,7 +85,7 @@ class PrivateKeyring:
             if keyToExport.usedAlgorithm == "RSA" or keyToExport.usedAlgorithm == "DSA":
                 privateKeyInPEM = Crypto.IO.PEM.encode(keyToExport.encryptedPrivateKey, "PRIVATE KEY")
             else:
-                privateKeyInPEM = f"-----BEGIN PUBLIC KEY-----\n{elGamalKeyToBase64(keyToExport.encryptedPrivateKey)}\n-----END PUBLIC KEY-----"
+                privateKeyInPEM = f"-----BEGIN PRIVATE KEY-----\n{keyToExport.encryptedPrivateKey}\n-----END PRIVATE KEY-----"
 
             # #CHECK THIS!! encryptedPrivateKey is stored as bytes, this does not work >.<
             # privateKeyInPEM = keyToExport.encryptedPrivateKey.public_bytes(
@@ -94,7 +94,7 @@ class PrivateKeyring:
             #     encryption_algorithm=serialization.NoEncryption()
             # ).decode('utf-8')
 
-            outputDataPR = keyToExport.userID + "~" + usage + "~" + keyToExport.usedAlgorithm + "~" + str(keyToExport.length) + "~" + privateKeyInPEM
+            outputDataPR = keyToExport.userID + "~#~" + usage + "~#~" + keyToExport.usedAlgorithm + "~#~" + str(keyToExport.length) + "~#~" + privateKeyInPEM
             if not PATH:
                 filenamePR = f'{PEM_FOLDER}PR_{keyToExport.keyID}.pem'
             else:
@@ -117,26 +117,26 @@ class PrivateKeyring:
         # Load public part of the key
         with open(filename_pu, 'r') as file_pu:
             data = file_pu.read()
-            userId = data.split('~')[0]
-            usedAlgorithm = data.split('~')[1]
+            userId = data.split('~#~')[0]
+            usedAlgorithm = data.split('~#~')[1]
             if usedAlgorithm == "ElGamal":
-                keyInPEM = data.split('~')[2]
+                keyInPEM = data.split('~#~')[2]
                 dat = keyInPEM.replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
                 publicKey = elGamalBase64ToKey(dat.encode('utf-8'))
             else:
-                publicKey = load_pem_public_key(data.split('~')[2].encode('utf-8'))
+                publicKey = load_pem_public_key(data.split('~#~')[2].encode('utf-8'))
             keyID = self.getKeyID(publicKey=publicKey)
 
         with open(filename_pr, 'r') as file_pr:
             data = file_pr.read()
-            usage = data.split('~')[1]
-            length = int(data.split('~')[3])
+            usage = data.split('~#~')[1]
+            length = int(data.split('~#~')[3])
             if usedAlgorithm == "ElGamal":
-                keyInPEM = data.split('~')[4]
-                dat = keyInPEM.replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
-                encPrivateKey = elGamalBase64ToKey(dat.encode('utf-8'))
+                keyInPEM = data.split('~#~')[4]
+                dat = keyInPEM.replace("-----BEGIN PRIVATE KEY-----\n", "").replace("\n-----END PRIVATE KEY-----", "")
+                encPrivateKey = bytes(dat[2:-1], 'utf-8')
             else:
-                encPrivateKey = Crypto.IO.PEM.decode(data.split('~')[4])
+                encPrivateKey = Crypto.IO.PEM.decode(data.split('~#~')[4])
 
         newPrivateKey = PrivateKeyringValues(
             keyID=keyID,

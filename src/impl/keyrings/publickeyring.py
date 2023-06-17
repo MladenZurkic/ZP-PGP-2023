@@ -69,7 +69,7 @@ class PublicKeyring:
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
             ).decode('utf-8')
 
-            outputData = keyToExport.userID + "~" + keyToExport.usedAlgorithm + "~" + publicKeyInPEM
+            outputData = keyToExport.userID + "~#~" + keyToExport.usedAlgorithm + "~#~" + publicKeyInPEM
             filename = f'{PEM_FOLDER}{keyToExport.keyID}.pem'
             with open(filename, 'w') as file:
                 file.write(outputData)
@@ -79,14 +79,14 @@ class PublicKeyring:
     def importKey(self, filename):
         with open(filename, 'r') as file:
             dat = file.read()
-            userId = dat.split('~')[0]
-            usedAlgorithm = dat.split('~')[1]
+            userId = dat.split('~#~')[0]
+            usedAlgorithm = dat.split('~#~')[1]
             if usedAlgorithm == "ElGamal":
-                keyInPEM = dat.split('~')[2]
+                keyInPEM = dat.split('~#~')[2]
                 dat = keyInPEM.replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
                 publicKey = elGamalBase64ToKey(dat.encode('utf-8'))
             else:
-                publicKey = load_pem_public_key(dat.split('~')[2].encode('utf-8'))
+                publicKey = load_pem_public_key(dat.split('~#~')[2].encode('utf-8'))
             keyID = self.getKeyID(publicKey)
 
             if keyID in self.publicKeyring.keys():

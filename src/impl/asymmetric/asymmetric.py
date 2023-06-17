@@ -8,8 +8,7 @@ from src.impl.hash.hash import hashMD5
 from src.impl.keyrings.privatekeyring import PrivateKeyring
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization, hashes
-from src.impl.asymmetric.elGamal import elGamalGenerateKeys, elGamalEncrypt, elGamalKeyToBytes, elGamalBytesToKey, \
-    elGamalDecrypt
+from src.impl.asymmetric.elGamal import *
 from src.impl.symmetric.symmetric import SymmetricEncryptionDecryption
 
 BLOCK_SIZE = 64
@@ -167,7 +166,7 @@ def decryptPrivateKey(privateKey, passphrase, usage):
             if usage == "Signing" or usage == "s":
                 decryptedPrivateKey = serialization.load_der_private_key(decryptedPrivateKeyBytes, None)
             else:
-                decryptedPrivateKey = elGamalBytesToKey(decryptedPrivateKeyBytes)
+                decryptedPrivateKey = elGamalBase64ToKey(decryptedPrivateKeyBytes)
     except ValueError as err:
         print(err)
         return -1, None

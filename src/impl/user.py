@@ -2,6 +2,7 @@ import base64
 import binascii
 
 from src.impl.asymmetric import asymmetric
+from src.impl.asymmetric.asymmetric import decryptPrivateKey
 from src.impl.asymmetric.elGamal import elGamalKeyToBytes
 from src.impl.keyrings.privatekeyring import PrivateKeyring
 from src.impl.keyrings.publickeyring import PublicKeyring
@@ -128,13 +129,16 @@ if __name__ == '__main__':
     user1.privateKeyring.exportKey(privateKey.keyID, "e", "C:/Users/Filip/Desktop/ZP Projekat/pem_files/")
 
     # Ovo radi
-    user1.publicKeyring.importKey("C:/Users/Filip/Desktop/ZP Projekat/pem_files/PU_14487548930483000366.pem")
-    user1.publicKeyring.printKeyring()
+    # user1.publicKeyring.importKey("C:/Users/Filip/Desktop/ZP Projekat/pem_files/PU_14487548930483000366.pem")
+    # user1.publicKeyring.printKeyring()
 
     # Ovo radi
     user1.privateKeyring.importKey(
-        "C:/Users/Filip/Desktop/ZP Projekat/pem_files/PU_14487548930483000366.pem",
-        "C:/Users/Filip/Desktop/ZP Projekat/pem_files/PR_14487548930483000366.pem"
+        "C:/Users/Filip/Desktop/ZP Projekat/pem_files/PU_8789233877840794670.pem",
+        "C:/Users/Filip/Desktop/ZP Projekat/pem_files/PR_8789233877840794670.pem"
     )
     user1.privateKeyring.printKeyring("ENCRYPTION")
+
+    encprivkey = user1.privateKeyring.getKeyForEncryption(8789233877840794670)
+    decryptPrivateKey(encprivkey, "sifra", "e")
 
