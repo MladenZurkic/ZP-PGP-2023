@@ -76,7 +76,7 @@ if __name__ == '__main__':
     #DOES NOT WORK ANYMORE :(
     user1 = User()
     # def generateKeys(self, name, email, algorithm, sizeOfKeys, password):
-    user1.generateKeys("Filip", "filip@gmail.com", "RSA", 1024, "sifra")
+    user1.generateKeys("Filip", "filip@gmail.com", "ElGamal", 1024, "sifra")
     user1.printKeys()
 
     data = "ZP Projekat 2023"
@@ -119,19 +119,22 @@ if __name__ == '__main__':
     # assert decryptedData == concatData
     #
     # # ****** IMPORT EXPORT: ******
-    key = list(user1.privateKeyring.privateKeyringSigning)
-    privateKey = user1.privateKeyring.getKeyForSigning(key[0])
+    key = list(user1.privateKeyring.privateKeyringEncryption)
+    privateKey = user1.privateKeyring.getKeyForEncryption(key[0])
     # publicKey = privateKey.publicKey
 
 
     # Ovo radi
-    user1.privateKeyring.exportKey(privateKey.keyID, "s", "C:/Users/Mladen/Desktop/TestZPExport/")
+    user1.privateKeyring.exportKey(privateKey.keyID, "e", "C:/Users/Filip/Desktop/ZP Projekat/pem_files/")
 
     # Ovo radi
-    # user1.publicKeyring.importKey("C:/Users/Mladen/Desktop/TestZPExport/PU_12983771081721577473.pem")
-    # user1.publicKeyring.printKeyring()
+    user1.publicKeyring.importKey("C:/Users/Filip/Desktop/ZP Projekat/pem_files/PU_14487548930483000366.pem")
+    user1.publicKeyring.printKeyring()
 
     # Ovo radi
-    # user1.privateKeyring.importKey("C:/Users/Mladen/Desktop/TestZPExport/PU_12983771081721577473.pem", "C:/Users/Mladen/Desktop/TestZPExport/PR_12983771081721577473.pem", "s")
-    # user1.privateKeyring.printKeyring("SIGNING")
+    user1.privateKeyring.importKey(
+        "C:/Users/Filip/Desktop/ZP Projekat/pem_files/PU_14487548930483000366.pem",
+        "C:/Users/Filip/Desktop/ZP Projekat/pem_files/PR_14487548930483000366.pem"
+    )
+    user1.privateKeyring.printKeyring("ENCRYPTION")
 

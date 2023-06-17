@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
 from tabulate import tabulate
 
-from src.impl.asymmetric.elGamal import elGamalKeyToBytes
+from src.impl.asymmetric.elGamal import elGamalKeyToBytes, elGamalBase64ToKey
 
 PEM_FOLDER = '../../../../pem_files/'
 
@@ -81,7 +81,12 @@ class PublicKeyring:
             dat = file.read()
             userId = dat.split('~')[0]
             usedAlgorithm = dat.split('~')[1]
-            publicKey = load_pem_public_key(dat.split('~')[2].encode('utf-8'))
+            if usedAlgorithm == "ElGamal":
+                keyInPEM = dat.split('~')[2]
+                dat = keyInPEM.replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
+                publicKey = elGamalBase64ToKey(dat.encode('utf-8'))
+            else:
+                publicKey = load_pem_public_key(dat.split('~')[2].encode('utf-8'))
             keyID = self.getKeyID(publicKey)
 
             if keyID in self.publicKeyring.keys():

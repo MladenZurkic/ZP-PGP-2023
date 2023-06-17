@@ -9,7 +9,7 @@ from Crypto.Util.Padding import pad
 from src.impl.hash.hash import  hashMD5
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, dsa
-from src.impl.asymmetric.elGamal import elGamalGenerateKeys, elGamalKeyToBytes
+from src.impl.asymmetric.elGamal import *
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
 
 BLOCK_SIZE = 64
@@ -54,21 +54,25 @@ class PrivateKeyring:
             print("Nije pronadjen kljuc (Encryption): " + str(err.args[0]))
             return None
 
-
     def exportKey(self, keyID, usage, PATH):
-        if usage == 'singing' or usage == 's':
+        if usage == 'Singing' or usage == 's':
             keyToExport: PrivateKeyringValues = self.getKeyForSigning(keyID)
-        elif usage == 'encryption' or usage == 'e':
+        elif usage == 'Encryption' or usage == 'e':
             keyToExport: PrivateKeyringValues = self.getKeyForEncryption(keyID)
         else:
             print('Navedena neadekvatna upotreba prilikom izvoza!')
             return None
 
         if keyToExport:
-            publicKeyInPEM = keyToExport.publicKey.public_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo
-            ).decode('utf-8')
+            if keyToExport.usedAlgorithm == "RSA" or keyToExport.usedAlgorithm == "DSA":
+                # Public key is either DSA or RSA
+                publicKeyInPEM = keyToExport.publicKey.public_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PublicFormat.SubjectPublicKeyInfo
+                ).decode('utf-8')
+            else:
+                # Public key is ElGamal
+                publicKeyInPEM = f"-----BEGIN PUBLIC KEY-----\n{elGamalKeyToBase64(keyToExport.publicKey)}\n-----END PUBLIC KEY-----"
 
             outputDataPU = keyToExport.userID + "~" + keyToExport.usedAlgorithm + "~" + publicKeyInPEM
             if not PATH:
@@ -78,7 +82,10 @@ class PrivateKeyring:
             with open(filenamePU, 'w') as file:
                 file.write(outputDataPU)
 
-            privateKeyInPEM = Crypto.IO.PEM.encode(keyToExport.encryptedPrivateKey, "PRIVATE KEY")
+            if keyToExport.usedAlgorithm == "RSA" or keyToExport.usedAlgorithm == "DSA":
+                privateKeyInPEM = Crypto.IO.PEM.encode(keyToExport.encryptedPrivateKey, "PRIVATE KEY")
+            else:
+                privateKeyInPEM = f"-----BEGIN PUBLIC KEY-----\n{elGamalKeyToBase64(keyToExport.encryptedPrivateKey)}\n-----END PUBLIC KEY-----"
 
             # #CHECK THIS!! encryptedPrivateKey is stored as bytes, this does not work >.<
             # privateKeyInPEM = keyToExport.encryptedPrivateKey.public_bytes(
@@ -87,7 +94,7 @@ class PrivateKeyring:
             #     encryption_algorithm=serialization.NoEncryption()
             # ).decode('utf-8')
 
-            outputDataPR = keyToExport.userID + "~" + keyToExport.usedAlgorithm + "~" + str(keyToExport.length) + "~" + privateKeyInPEM
+            outputDataPR = keyToExport.userID + "~" + usage + "~" + keyToExport.usedAlgorithm + "~" + str(keyToExport.length) + "~" + privateKeyInPEM
             if not PATH:
                 filenamePR = f'{PEM_FOLDER}PR_{keyToExport.keyID}.pem'
             else:
@@ -95,29 +102,41 @@ class PrivateKeyring:
             with open(filenamePR, 'w') as file:
                 file.write(outputDataPR)
 
-
     def getKeyID(self, publicKey):
-        newKeyIDbin = publicKey.public_bytes(
-            encoding=serialization.Encoding.DER,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
+        if not isinstance(publicKey, tuple):
+            newKeyIDbin = publicKey.public_bytes(
+                encoding=serialization.Encoding.DER,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+        else:
+            newKeyIDbin = elGamalKeyToBytes(publicKey)
 
         return int(binascii.hexlify(newKeyIDbin), 16) & ((1 << 64) - 1)
 
-
-    def importKey(self, filename_pu, filename_pr, usage):
+    def importKey(self, filename_pu, filename_pr):
         # Load public part of the key
         with open(filename_pu, 'r') as file_pu:
             data = file_pu.read()
             userId = data.split('~')[0]
             usedAlgorithm = data.split('~')[1]
-            publicKey = load_pem_public_key(data.split('~')[2].encode('utf-8'))
+            if usedAlgorithm == "ElGamal":
+                keyInPEM = data.split('~')[2]
+                dat = keyInPEM.replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
+                publicKey = elGamalBase64ToKey(dat.encode('utf-8'))
+            else:
+                publicKey = load_pem_public_key(data.split('~')[2].encode('utf-8'))
             keyID = self.getKeyID(publicKey=publicKey)
 
         with open(filename_pr, 'r') as file_pr:
             data = file_pr.read()
-            length = int(data.split('~')[2])
-            encPrivateKey = Crypto.IO.PEM.decode(data.split('~')[3])
+            usage = data.split('~')[1]
+            length = int(data.split('~')[3])
+            if usedAlgorithm == "ElGamal":
+                keyInPEM = data.split('~')[4]
+                dat = keyInPEM.replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
+                encPrivateKey = elGamalBase64ToKey(dat.encode('utf-8'))
+            else:
+                encPrivateKey = Crypto.IO.PEM.decode(data.split('~')[4])
 
         newPrivateKey = PrivateKeyringValues(
             keyID=keyID,
@@ -216,7 +235,7 @@ class PrivateKeyring:
             publicKey= publicKeyEncryption,
             ecp= encryptedKeyEncryption,
             userID= name + ": " + email,
-            usedAlgorithm= algo,
+            usedAlgorithm="RSA" if algo == "RSA" else "ElGamal",
             length=sizeOfKeys
         )
 
@@ -227,7 +246,7 @@ class PrivateKeyring:
             publicKey=publicKeySigning,
             ecp=encryptedKeySigning,
             userID=name + ": " + email,
-            usedAlgorithm=algo,
+            usedAlgorithm="RSA" if algo == "RSA" else "DSA",
             length=sizeOfKeys
         )
 

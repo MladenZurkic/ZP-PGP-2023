@@ -1,3 +1,4 @@
+import base64
 import pickle
 from Crypto.Util import number
 
@@ -53,3 +54,38 @@ def elGamalKeyToBytes(key):
 
 def elGamalBytesToKey(key):
     return pickle.loads(key)
+
+
+def elGamalKeyToBase64(key):
+    keyBytesList = []
+    for element in key:
+        byteSize = (element.bit_length() + 7) // 8
+        byteValue = element.to_bytes(byteSize, 'big')
+        keyBytesList.append(byteValue)
+
+    concatenateKeyBytes = b''.join(keyBytesList)
+    encodedKeyBytes = base64.b64encode(concatenateKeyBytes)
+    encodedString = encodedKeyBytes.decode('utf-8')
+
+    return encodedString
+
+
+def elGamalBase64ToKey(key):
+    decodedKeyBytes = base64.b64decode(key)
+    byteKeySize = len(key) // 4
+    bytesKeyList = [
+        decodedKeyBytes[i: min(i + byteKeySize, len(decodedKeyBytes))]
+        for i in range(0, len(decodedKeyBytes), byteKeySize)
+    ]
+    decodedKeyTuple = tuple(int.from_bytes(bytesElement, 'big') for bytesElement in bytesKeyList)
+
+    return decodedKeyTuple
+
+
+if __name__ == '__main__':
+    p, g, x, y = elGamalGenerateKeys(1024)
+    publicKey = (p, g, y)
+    enc = elGamalKeyToBase64(publicKey)
+    publicKeyRec = elGamalBase64ToKey(enc)
+
+    print(publicKey == publicKeyRec)
