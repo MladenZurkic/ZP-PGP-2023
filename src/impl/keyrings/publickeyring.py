@@ -52,6 +52,7 @@ class PublicKeyring:
         self.publicKeyring[newKeyID]: PublicKeyringValues = newPublicKey
 
     # Get key that's already in the keyring
+    # Returns PublicKeyringValues object?
     def getKey(self, keyID):
         try:
             return self.publicKeyring[keyID]

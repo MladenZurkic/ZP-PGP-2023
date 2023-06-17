@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\uiFiles\receivePrompt.ui'
+# Form implementation generated from reading ui file '.\uiFiles\privateKeyPasswordPrompt.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -11,11 +11,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_ReceiveDialog(object):
-    def setupUi(self, ReceiveDialog):
-        ReceiveDialog.setObjectName("ReceiveDialog")
-        ReceiveDialog.resize(400, 207)
-        ReceiveDialog.setStyleSheet("QPushButton {\n"
+class Ui_privateKeyPasswordPrompt(object):
+    def setupUi(self, privateKeyPasswordPrompt):
+        privateKeyPasswordPrompt.setObjectName("privateKeyPasswordPrompt")
+        privateKeyPasswordPrompt.resize(400, 207)
+        privateKeyPasswordPrompt.setStyleSheet("QPushButton {\n"
 "    background-color: #dbd5c3;\n"
 "}\n"
 "QDialog { \n"
@@ -25,12 +25,12 @@ class Ui_ReceiveDialog(object):
 "QTextEdit {\n"
 "    background-color: #dbd5c3;\n"
 "}")
-        self.buttonBox = QtWidgets.QDialogButtonBox(ReceiveDialog)
+        self.buttonBox = QtWidgets.QDialogButtonBox(privateKeyPasswordPrompt)
         self.buttonBox.setGeometry(QtCore.QRect(120, 170, 161, 23))
         self.buttonBox.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
-        self.passwordInputText = QtWidgets.QTextEdit(ReceiveDialog)
+        self.passwordInputText = QtWidgets.QTextEdit(privateKeyPasswordPrompt)
         self.passwordInputText.setGeometry(QtCore.QRect(90, 110, 221, 41))
         font = QtGui.QFont()
         font.setPointSize(12)
@@ -41,7 +41,7 @@ class Ui_ReceiveDialog(object):
         font.setKerning(True)
         self.passwordInputText.setFont(font)
         self.passwordInputText.setObjectName("passwordInputText")
-        self.passwordLabel = QtWidgets.QLabel(ReceiveDialog)
+        self.passwordLabel = QtWidgets.QLabel(privateKeyPasswordPrompt)
         self.passwordLabel.setGeometry(QtCore.QRect(0, 10, 401, 51))
         font = QtGui.QFont()
         font.setFamily("Arial")
@@ -57,24 +57,24 @@ class Ui_ReceiveDialog(object):
 "}")
         self.passwordLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.passwordLabel.setObjectName("passwordLabel")
-        self.receiveKeyIDLabel = QtWidgets.QLabel(ReceiveDialog)
-        self.receiveKeyIDLabel.setGeometry(QtCore.QRect(0, 70, 401, 31))
+        self.privateKeyIDLabel = QtWidgets.QLabel(privateKeyPasswordPrompt)
+        self.privateKeyIDLabel.setGeometry(QtCore.QRect(0, 70, 401, 31))
         font = QtGui.QFont()
         font.setFamily("Arial")
         font.setPointSize(12)
-        self.receiveKeyIDLabel.setFont(font)
-        self.receiveKeyIDLabel.setStyleSheet("QLabel {\n"
+        self.privateKeyIDLabel.setFont(font)
+        self.privateKeyIDLabel.setStyleSheet("QLabel {\n"
 "    color: white;\n"
 "}")
-        self.receiveKeyIDLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.receiveKeyIDLabel.setObjectName("receiveKeyIDLabel")
+        self.privateKeyIDLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.privateKeyIDLabel.setObjectName("privateKeyIDLabel")
 
-        self.retranslateUi(ReceiveDialog)
-        QtCore.QMetaObject.connectSlotsByName(ReceiveDialog)
+        self.retranslateUi(privateKeyPasswordPrompt)
+        QtCore.QMetaObject.connectSlotsByName(privateKeyPasswordPrompt)
 
-    def retranslateUi(self, ReceiveDialog):
+    def retranslateUi(self, privateKeyPasswordPrompt):
         _translate = QtCore.QCoreApplication.translate
-        ReceiveDialog.setWindowTitle(_translate("ReceiveDialog", "Dialog"))
-        self.passwordLabel.setText(_translate("ReceiveDialog", "To Decrypt this message\n"
-"you need to enter password for Key:"))
-        self.receiveKeyIDLabel.setText(_translate("ReceiveDialog", "placeholder"))
+        privateKeyPasswordPrompt.setWindowTitle(_translate("privateKeyPasswordPrompt", "Dialog"))
+        self.passwordLabel.setText(_translate("privateKeyPasswordPrompt", "To View this Key\n"
+"You Need to Enter Password:"))
+        self.privateKeyIDLabel.setText(_translate("privateKeyPasswordPrompt", "placeholder"))

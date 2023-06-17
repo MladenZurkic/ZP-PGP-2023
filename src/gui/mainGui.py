@@ -2,12 +2,18 @@ import base64
 import os
 import sys
 import time
+from datetime import datetime
 
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QDialog, QTableWidgetItem, QPushButton, QHeaderView
 from PyQt5 import QtWidgets
+from cryptography.hazmat.primitives import serialization
+
 from src.gui.pyFiles.mainWindow import Ui_MainWindow
+from src.gui.pyFiles.privateKeyPasswordPrompt import Ui_privateKeyPasswordPrompt
+from src.gui.pyFiles.publicKeyInfo import Ui_PublicKeyInfoDialog
 from src.gui.pyFiles.sendPrompt import Ui_Dialog
 from src.gui.pyFiles.receivePrompt import Ui_ReceiveDialog
+from src.impl.asymmetric.elGamal import elGamalKeyToBytes
 from src.impl.user import User
 from src.impl.compression.compression import compress, decompress
 from src.impl.conversion.conversion import decodeFromRadix64, encodeToRadix64
@@ -39,6 +45,56 @@ class ReceivePrompt(QDialog, Ui_ReceiveDialog):
 
     def buttonCancel(self):
         self.reject()
+
+
+class MoreInfoPublic(QDialog, Ui_PublicKeyInfoDialog):
+    def __init__(self, user, keyID, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        publicKey = user.publicKeyring.getKey(keyID)
+        self.timeLabelInput.setText(str(datetime.fromtimestamp(publicKey.timestamp)))
+        self.userIDLabelInput.setText(publicKey.userID)
+        self.keyIDLabelInput.setText(str(keyID))
+        self.algorithmLabelInput.setText(publicKey.usedAlgorithm)
+
+        if publicKey.usedAlgorithm == "RSA":
+            publicKeyPEM = publicKey.publicKey.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+        else:
+            publicKeyBytes = elGamalKeyToBytes(publicKey.publicKey)
+            publicKeyPEM = f"-----BEGIN PUBLIC KEY-----\n{publicKeyBytes}\n-----END PUBLIC KEY-----"
+
+        self.publicKeyTextInput.setText(publicKeyPEM.decode("utf-8"))
+        self.exitButton.clicked.connect(self.buttonExit)
+
+    def buttonExit(self):
+        self.accept()
+
+
+class MoreInfoPrivatePrompt(QDialog, Ui_privateKeyPasswordPrompt):
+    def __init__(self, keyID, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.buttonBox.accepted.connect(self.buttonOK)
+        self.buttonBox.rejected.connect(self.buttonCancel)
+        self.privateKeyIDLabel.setText(str(keyID))
+
+    def buttonOK(self):
+        self.accept()
+
+    def buttonCancel(self):
+        self.reject()
+
+
+class MoreInfoPrivate(QDialog, Ui_PublicKeyInfoDialog):
+
+    def __init__(self, privateKey, password, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+
+
 
 
 class Window(QMainWindow, Ui_MainWindow):
@@ -335,13 +391,34 @@ class Window(QMainWindow, Ui_MainWindow):
         self.privateKeyRingTable.setItem(rowPosition, 3, QTableWidgetItem(str(algorithm)))
 
         buttonMore = QPushButton("More..")
-        buttonMore.clicked.connect(lambda checked, id=keyID: self.handle_button_click(id))
+        buttonMore.clicked.connect(lambda checked, id=keyID, usage=usage: self.moreInformationPrivate(id, usage))
         self.privateKeyRingTable.setCellWidget(rowPosition, 4, buttonMore)
 
         buttonDelete = QPushButton("Delete")
         buttonDelete.setStyleSheet("QPushButton { background-color: #b0a996; font: bold; }")
         buttonDelete.clicked.connect(lambda checked, id=keyID: self.deletePrivateKey(id))
         self.privateKeyRingTable.setCellWidget(rowPosition, 5, buttonDelete)
+
+
+    def moreInformationPrivate(self, keyID, usage):
+        # Open prompt for password:
+        privateKeyPasswordPrompt = MoreInfoPrivatePrompt(keyID)
+        if privateKeyPasswordPrompt.exec_() == QDialog.Accepted:
+            password = privateKeyPasswordPrompt.passwordInputText.toPlainText()
+        else:
+            return -1
+        # MORE INFO PROZOR
+        # MORA DA SE NAPRAVI FUNKCIJA KOJA PROVERAVA DA LI JE PASSWORD DOBAR!
+        # ima na vise mesta gde treba da se iskoristi ta funkcija
+        # Ovde smatram da je password dobar
+        if usage == 'Signing' or usage == 's':
+            privateKey = self.user.privateKeyring.getKeyForSigning(keyID)
+        else:
+            privateKey = self.user.privateKeyring.getKeyForEncryption(keyID)
+
+        moreInfoPrivatePrompt = MoreInfoPrivate(privateKey, password)
+        moreInfoPrivatePrompt.exec_()
+
 
 
     def addRowToPublicKeyRingTable(self, keyID):
@@ -356,7 +433,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.publicKeyRingTable.setItem(rowPosition, 2, QTableWidgetItem(str(algorithm)))
 
         buttonMore = QPushButton("More..")
-        buttonMore.clicked.connect(lambda checked, id=keyID: self.handle_button_click(id))
+        buttonMore.clicked.connect(lambda checked, id=keyID: self.moreInformationPublic(id))
         self.publicKeyRingTable.setCellWidget(rowPosition, 3, buttonMore)
 
         buttonDelete = QPushButton("Delete")
@@ -365,9 +442,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.publicKeyRingTable.setCellWidget(rowPosition, 4, buttonDelete)
 
 
-    def handle_button_click(self, keyID):
-        print("Button clicked, Row ", keyID)
-
+    def moreInformationPublic(self, keyID):
+        # Open prompt for more information:
+        moreInfoPublicPrompt = MoreInfoPublic(self.user, keyID)
+        moreInfoPublicPrompt.exec_()
 
     def deletePublicKey(self, keyID):
         rowCount = self.publicKeyRingTable.rowCount()
