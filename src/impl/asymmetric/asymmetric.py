@@ -150,6 +150,31 @@ def encryptData(algorithm, publicKey, data):
     return 0, ciphertext
 
 
+def decryptPrivateKey(privateKey, passphrase, usage):
+
+    hashedPassword = hashMD5(passphrase)
+    encryptedPrivateKey = privateKey.encryptedPrivateKey
+    cipher = DES3.new(hashedPassword, DES3.MODE_ECB)
+
+    decryptedPrivateKeyPadded = cipher.decrypt(encryptedPrivateKey)
+    algorithm = privateKey.usedAlgorithm
+
+    try:
+        decryptedPrivateKeyBytes = unpad(decryptedPrivateKeyPadded, BLOCK_SIZE)
+        if (algorithm.upper() == "RSA"):
+            decryptedPrivateKey = serialization.load_der_private_key(decryptedPrivateKeyBytes, None)
+        else:
+            if usage == "Signing" or usage == "s":
+                decryptedPrivateKey = serialization.load_der_private_key(decryptedPrivateKeyBytes, None)
+            else:
+                decryptedPrivateKey = elGamalBytesToKey(decryptedPrivateKeyBytes)
+    except ValueError as err:
+        print(err)
+        return -1, None
+    return 0, decryptedPrivateKey
+
+
+
 def decryptData(algorithm, privateKeyValue, data, passphrase):
 
     hashedPassword = hashMD5(passphrase)

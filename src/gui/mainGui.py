@@ -8,11 +8,14 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QDialog, QTa
 from PyQt5 import QtWidgets
 from cryptography.hazmat.primitives import serialization
 
+from src.gui.pyFiles.exportPathPrompt import Ui_ExportPathDialog
 from src.gui.pyFiles.mainWindow import Ui_MainWindow
+from src.gui.pyFiles.privateKeyInfo import Ui_PrivateKeyInfoDialog
 from src.gui.pyFiles.privateKeyPasswordPrompt import Ui_privateKeyPasswordPrompt
 from src.gui.pyFiles.publicKeyInfo import Ui_PublicKeyInfoDialog
 from src.gui.pyFiles.sendPrompt import Ui_Dialog
 from src.gui.pyFiles.receivePrompt import Ui_ReceiveDialog
+from src.impl.asymmetric import asymmetric
 from src.impl.asymmetric.elGamal import elGamalKeyToBytes
 from src.impl.user import User
 from src.impl.compression.compression import compress, decompress
@@ -87,14 +90,87 @@ class MoreInfoPrivatePrompt(QDialog, Ui_privateKeyPasswordPrompt):
     def buttonCancel(self):
         self.reject()
 
+class ExportPathPrompt(QDialog, Ui_ExportPathDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.buttonBox.accepted.connect(self.buttonOK)
+        self.buttonBox.rejected.connect(self.buttonCancel)
+        self.exportBrowsePathButton.clicked.connect(self.pathBrowseClicked)
 
-class MoreInfoPrivate(QDialog, Ui_PublicKeyInfoDialog):
+    def pathBrowseClicked(self):
+        frame = QFileDialog.getExistingDirectory(None, 'Select Folder for Exporting:', 'C:\\Users\\Mladen\\Desktop\\TestZPFajlovi\\', QtWidgets.QFileDialog.ShowDirsOnly)
+        self.pathInputText.setText(frame)
 
-    def __init__(self, privateKey, password, parent=None):
+    def buttonOK(self):
+        self.accept()
+
+    def buttonCancel(self):
+        self.reject()
+
+
+class MoreInfoPrivate(QDialog, Ui_PrivateKeyInfoDialog):
+    def __init__(self, privateKey, password, usage, user, parent=None):
         super().__init__(parent)
         self.setupUi(self)
 
+        self.privateKey = privateKey
+        self.usage = usage
+        self.user = user
 
+        #Buttons for Export ant Exit:
+        self.exitButton.clicked.connect(self.buttonExit)
+        self.exportButton.clicked.connect(self.buttonExport)
+
+        self.timeLabelInput.setText(str(datetime.fromtimestamp(privateKey.timestamp)))
+        self.userIDLabelInput.setText(privateKey.userID)
+        self.keyIDLabelInput.setText(str(privateKey.keyID))
+        self.algorithmLabelInput.setText(privateKey.usedAlgorithm)
+
+        publicKey = privateKey.publicKey
+        if privateKey.usedAlgorithm == "RSA":
+            publicKeyPEM = publicKey.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            ).decode("utf-8")
+        else:
+            if usage == "Signing" or usage == "s":
+                publicKeyPEM = publicKey.public_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PublicFormat.SubjectPublicKeyInfo
+                ).decode("utf-8")
+            else:
+                publicKeyPEM = f"-----BEGIN PUBLIC KEY-----\n{publicKey}\n-----END PUBLIC KEY-----"
+
+        self.publicKeyTextInput.setText(publicKeyPEM)
+        returnCode, decryptedPrivateKey = asymmetric.decryptPrivateKey(privateKey, password, usage)
+
+        if returnCode < 0:
+            self.reject()
+        else:
+            if privateKey.usedAlgorithm == "RSA" or usage == "Signing" or usage == "s":
+                decryptedPrivateKey = decryptedPrivateKey.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.PKCS8,
+                    encryption_algorithm=serialization.NoEncryption()
+                ).decode("utf-8")
+                self.privateKeyTextInput.setText(decryptedPrivateKey)
+            else:
+                #Radi se o ElGamalu:
+                self.privateKeyTextInput.setText(f"-----BEGIN PRIVATE KEY-----\n{decryptedPrivateKey}\n-----END PRIVATE KEY-----")
+
+    def buttonExit(self):
+        self.accept()
+
+    def buttonExport(self):
+        #Button for exporting private key:
+        # Open prompt for entering path:
+        exportPathPrompt = ExportPathPrompt()
+        if exportPathPrompt.exec_() == QDialog.Accepted:
+            path = exportPathPrompt.pathInputText.toPlainText()
+            self.user.privateKeyring.exportKey(self.privateKey.keyID, self.usage, path)
+        else:
+            return -1
 
 
 class Window(QMainWindow, Ui_MainWindow):
@@ -142,11 +218,18 @@ class Window(QMainWindow, Ui_MainWindow):
         self.generateErrorLabel.setStyleSheet("QLabel { color: red; }")
         self.sendErrorLabel.setStyleSheet("QLabel { color: red; }")
 
-        header = self.privateKeyRingTable.horizontalHeader()
-        header.resizeSection(0, 170)
-        header.resizeSection(1, 170)
-        header.resizeSection(4, 100)
-        header.resizeSection(5, 100)
+        headerPrivate = self.privateKeyRingTable.horizontalHeader()
+        headerPrivate.resizeSection(0, 170)
+        headerPrivate.resizeSection(1, 170)
+        headerPrivate.resizeSection(4, 100)
+        headerPrivate.resizeSection(5, 100)
+
+        headerPublic = self.publicKeyRingTable.horizontalHeader()
+        headerPublic.resizeSection(0, 170)
+        headerPublic.resizeSection(1, 170)
+        headerPublic.resizeSection(2, 100)
+        headerPublic.resizeSection(3, 150)
+        headerPublic.resizeSection(4, 150)
 
         self.user = User()
 
@@ -279,6 +362,15 @@ class Window(QMainWindow, Ui_MainWindow):
                     return -1
 
                 privateID = self.sendSignPrivateIDInput.toPlainText()
+                privateKeyRingValue = self.user.privateKeyring.getKeyForSigning(int(privateID))
+
+                #Check if password is correct:
+                returnCode, decryptedPrivateKey = asymmetric.decryptPrivateKey(privateKeyRingValue, password, "Signing")
+                if returnCode < 0:
+                    self.sendErrorLabel.setStyleSheet("QLabel { color: red; }")
+                    self.sendErrorLabel.setText("Password not entered or not correct!")
+                    return -1
+
                 signature = self.user.signData(data, int(privateID), password)
                 operations = "S" + operations
                 data = data + "~#~" + signature + "~#~" + "LEADING TWO OCTETS?" + "~#~" + privateID + "~#~" + str(timestamp)
@@ -407,17 +499,21 @@ class Window(QMainWindow, Ui_MainWindow):
             password = privateKeyPasswordPrompt.passwordInputText.toPlainText()
         else:
             return -1
-        # MORE INFO PROZOR
-        # MORA DA SE NAPRAVI FUNKCIJA KOJA PROVERAVA DA LI JE PASSWORD DOBAR!
-        # ima na vise mesta gde treba da se iskoristi ta funkcija
-        # Ovde smatram da je password dobar
+
         if usage == 'Signing' or usage == 's':
             privateKey = self.user.privateKeyring.getKeyForSigning(keyID)
         else:
             privateKey = self.user.privateKeyring.getKeyForEncryption(keyID)
 
-        moreInfoPrivatePrompt = MoreInfoPrivate(privateKey, password)
+        returnCode, decryptedPrivateKey = asymmetric.decryptPrivateKey(privateKey, password, usage)
+        if returnCode < 0:
+            return -1
+
+        #Očekuje da je privatekey objekat klase PrivateKeyValue
+        moreInfoPrivatePrompt = MoreInfoPrivate(privateKey, password, usage, self.user)
         moreInfoPrivatePrompt.exec_()
+
+
 
 
 
@@ -452,7 +548,7 @@ class Window(QMainWindow, Ui_MainWindow):
         for row in range(rowCount):
             if self.publicKeyRingTable.item(row, 0).text() == str(keyID):
                 self.publicKeyRingTable.removeRow(row)
-                #IMPLEMENTIRATI DELETE IZ PUBLIC KEYRINGA
+                self.user.publicKeyring.removeKey(keyID)
                 break
 
     def deletePrivateKey(self, keyID):
@@ -460,7 +556,7 @@ class Window(QMainWindow, Ui_MainWindow):
         for row in range(rowCount):
             if self.privateKeyRingTable.item(row, 0).text() == str(keyID):
                 self.privateKeyRingTable.removeRow(row)
-                #IMPLEMENTIRATI DELETE IZ PRIVATE KEYRINGA
+                self.user.privateKeyring.removeKey(keyID)
                 break
 
     def signCheckBoxClicked(self):

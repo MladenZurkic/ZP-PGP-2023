@@ -55,9 +55,9 @@ class PrivateKeyring:
             return None
 
     def exportKey(self, keyID, usage, PATH):
-        if usage == 'Singing' or usage == 's':
+        if usage == "Signing" or usage == 's':
             keyToExport: PrivateKeyringValues = self.getKeyForSigning(keyID)
-        elif usage == 'Encryption' or usage == 'e':
+        elif usage == "Encryption" or usage == 'e':
             keyToExport: PrivateKeyringValues = self.getKeyForEncryption(keyID)
         else:
             print('Navedena neadekvatna upotreba prilikom izvoza!')
