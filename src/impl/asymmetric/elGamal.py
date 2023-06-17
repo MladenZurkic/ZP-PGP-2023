@@ -32,7 +32,7 @@ def elGamalEncrypt(plaintext, publicKey):
 
 def elGamalDecrypt(ciphertext, privateKey):
     p, x = privateKey
-    c1, c2 = ciphertext
+    c1, c2 = pickle.loads(ciphertext)
 
     s = pow(c1, x, p)
     sInverse = number.inverse(s, p)

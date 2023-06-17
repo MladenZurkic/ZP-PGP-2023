@@ -2,6 +2,7 @@ import base64
 import binascii
 
 from src.impl.asymmetric import asymmetric
+from src.impl.asymmetric.elGamal import elGamalKeyToBytes
 from src.impl.keyrings.privatekeyring import PrivateKeyring
 from src.impl.keyrings.publickeyring import PublicKeyring
 from src.impl.symmetric.symmetric import SymmetricEncryptionDecryption
@@ -16,16 +17,17 @@ class User:
 
     def generateKeys(self, name, email, algorithm, sizeOfKeys, password):
         signingKeyID, encyptionKeyID = self.privateKeyring.generateKeys(name, email, algorithm, sizeOfKeys, password)
-        
-        self.publicKeyring.insertKey(self.privateKeyring.getKeyForEncryption(encyptionKeyID).publicKey, name, usedAlgorithm=algorithm)
+
         self.publicKeyring.insertKey(self.privateKeyring.getKeyForSigning(signingKeyID).publicKey, name, usedAlgorithm=algorithm)
+        self.publicKeyring.insertKey(self.privateKeyring.getKeyForEncryption(encyptionKeyID).publicKey, name, usedAlgorithm=algorithm)
+
 
         print("Keys Generated! The IDs of generated keys are: ")
         print("Key for Signing: " + str(signingKeyID))
         print("Key for Encyption: " + str(encyptionKeyID))
 
         print("You can now export them, use them to send data etc.")
-
+        return signingKeyID, encyptionKeyID
 
     def printKeys(self):
         self.publicKeyring.printKeyring()
@@ -43,11 +45,10 @@ class User:
 
 
     def verifySignature(self, data, signature, publicKey, algorithm):
-        # key = list(user1.privateKeyring.privateKeyringSigning)
-        # privateKey = user1.privateKeyring.getKeyForSigning(key[0])
-        # publicKey = privateKey.publicKey
         signature = base64.b64decode(signature) # STRING -> BYTES
         returnCode = asymmetric.verifySignedData(algorithm, data, signature, publicKey)
+
+        #Fix return values.
         if returnCode:
             print("Signature is NOT good!")
             return
@@ -58,15 +59,16 @@ class User:
         encryption = SymmetricEncryptionDecryption(algorithm, self.publicKeyring, self.privateKeyring)
         encryptedData, encryptedSessionKey = encryption.encrypt(publicKeyID, data)
 
+        if isinstance(encryptedSessionKey, tuple):
+            encryptedSessionKey = elGamalKeyToBytes(encryptedSessionKey)
         encryptedSessionKeyStr = base64.b64encode(encryptedSessionKey).decode('ascii')
         publicKeyIDStr = str(publicKeyID)
 
         return encryptedData, encryptedSessionKeyStr, publicKeyIDStr
 
-    def decryptData(self, data, password):
-        encodedData, encryptedSessionKeyStr, publicKeyIDStr = data.split("~#~")
+    def decryptData(self, encodedData, encryptedSessionKeyStr, publicKeyIDStr, password, algorithm):
         encryptedSessionKey = binascii.a2b_base64(encryptedSessionKeyStr)
-        decryption = SymmetricEncryptionDecryption("DES3", self.publicKeyring, self.privateKeyring)
+        decryption = SymmetricEncryptionDecryption(algorithm, self.publicKeyring, self.privateKeyring)
         return decryption.decrypt(int(publicKeyIDStr), password, encodedData, encryptedSessionKey)
 
 if __name__ == '__main__':

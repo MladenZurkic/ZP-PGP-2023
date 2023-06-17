@@ -37,7 +37,8 @@ class SymmetricEncryptionDecryption:
             # return 1, None
 
         publicKey = publicKeyringValue.publicKey
-        encryptedSessionKey = asymmetric.encryptData(GLOBAL_ALGO, publicKey, sessionKey)[1]
+        algorithm = publicKeyringValue.usedAlgorithm
+        encryptedSessionKey = asymmetric.encryptData(algorithm, publicKey, sessionKey)[1]
         return encodedData, encryptedSessionKey
 
 
@@ -47,8 +48,10 @@ class SymmetricEncryptionDecryption:
             print('Kljuc sa ID: ' + str(keyID) + ' ne postoji...')
             # return 1, None
 
+        algorithm = privateKeyringValue.usedAlgorithm
+
         sessionKey = asymmetric.decryptData(
-            GLOBAL_ALGO, privateKeyringValue, encryptedSessionKey, password
+            algorithm, privateKeyringValue, encryptedSessionKey, password
         )[1]
 
         cipher = self.type.new(sessionKey, self.type.MODE_ECB)

@@ -1,10 +1,13 @@
 import binascii
+from datetime import datetime
 import time
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
 from tabulate import tabulate
+
+from src.impl.asymmetric.elGamal import elGamalKeyToBytes
 
 PEM_FOLDER = '../../../../pem_files/'
 
@@ -24,10 +27,13 @@ class PublicKeyring:
         self.publicKeyring = {}
 
     def getKeyID(self, publicKey):
-        newKeyIDbin = publicKey.public_bytes(
-            encoding=serialization.Encoding.DER,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
+        if not isinstance(publicKey, tuple):
+            newKeyIDbin = publicKey.public_bytes(
+                encoding=serialization.Encoding.DER,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+        else:
+            newKeyIDbin = elGamalKeyToBytes(publicKey)
 
         return int(binascii.hexlify(newKeyIDbin), 16) & ((1 << 64) - 1)
 
@@ -88,6 +94,7 @@ class PublicKeyring:
                     usedAlgorithm=usedAlgorithm
                 )
                 self.publicKeyring[keyID] = newPublicKey
+            return keyID
 
     # Remove key from keyring
     def removeKey(self, keyID):
@@ -100,12 +107,15 @@ class PublicKeyring:
     def printKeyring(self):
         printTable = []
         for key in self.publicKeyring.keys():
-            keyPrint = int(binascii.hexlify(self.publicKeyring[key].publicKey.public_bytes(
-                encoding=serialization.Encoding.DER,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo
-            )), 16)
+            if not isinstance(self.publicKeyring[key].publicKey, tuple):
+                keyPrint = int(binascii.hexlify(self.publicKeyring[key].publicKey.public_bytes(
+                    encoding=serialization.Encoding.DER,
+                    format=serialization.PublicFormat.SubjectPublicKeyInfo
+                )), 16)
+            else:
+                keyPrint = int(binascii.hexlify(elGamalKeyToBytes(self.publicKeyring[key].publicKey)), 16)
             printTable.append([
-                self.publicKeyring[key].timestamp,
+                datetime.fromtimestamp(self.publicKeyring[key].timestamp),
                 self.publicKeyring[key].keyID,
                 keyPrint,
                 self.publicKeyring[key].userID,

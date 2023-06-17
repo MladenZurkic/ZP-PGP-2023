@@ -87,7 +87,7 @@ QTextEdit {
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>5</number>
+     <number>0</number>
     </property>
     <property name="documentMode">
      <bool>false</bool>
@@ -524,6 +524,11 @@ QTextEdit {
       </column>
       <column>
        <property name="text">
+        <string>Usage</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
         <string>Algorithm</string>
        </property>
        <property name="font">
@@ -531,6 +536,16 @@ QTextEdit {
          <family>MS Shell Dlg 2</family>
          <pointsize>10</pointsize>
         </font>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Show More</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Delete</string>
        </property>
       </column>
      </widget>
@@ -603,6 +618,16 @@ QTextEdit {
          <family>MS Shell Dlg 2</family>
          <pointsize>10</pointsize>
         </font>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Show More</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Delete</string>
        </property>
       </column>
      </widget>
@@ -1584,7 +1609,7 @@ QTextEdit {
      <x>0</x>
      <y>0</y>
      <width>785</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
@@ -1602,12 +1627,49 @@ QTextEdit {
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>generateNameInputText</tabstop>
+  <tabstop>generateEmailInputText</tabstop>
+  <tabstop>generateRSARadioButton</tabstop>
+  <tabstop>generateDSAElGamalRadioButton</tabstop>
+  <tabstop>generateKeySize1024RadioButton</tabstop>
+  <tabstop>generateKeysize2048RadioButton</tabstop>
+  <tabstop>generatePasswordInputText</tabstop>
+  <tabstop>generateButton</tabstop>
+  <tabstop>privateKeyRingTable</tabstop>
+  <tabstop>publicKeyRingTable</tabstop>
+  <tabstop>sendMessageInputText</tabstop>
+  <tabstop>sendSignCheckBox</tabstop>
+  <tabstop>sendSignPrivateIDInput</tabstop>
+  <tabstop>sendCompressCheckBox</tabstop>
+  <tabstop>sendEncryptCheckBox</tabstop>
+  <tabstop>send3DESRadioButton</tabstop>
+  <tabstop>sendAESRadioButton</tabstop>
+  <tabstop>sendEncryptPublicIDInputText</tabstop>
+  <tabstop>sendRadixCheckBox</tabstop>
+  <tabstop>sendFilenameInputText</tabstop>
+  <tabstop>sendButton</tabstop>
+  <tabstop>receiveMessagePathInput</tabstop>
+  <tabstop>receiveBrowsePathInputText</tabstop>
+  <tabstop>receiveButton</tabstop>
+  <tabstop>receivedMessageBox</tabstop>
+  <tabstop>importKeyTypePrivateRadioButton</tabstop>
+  <tabstop>importKeyTypePublicRadioButton</tabstop>
+  <tabstop>importPathForPUInputText</tabstop>
+  <tabstop>importBrowseForPUButton</tabstop>
+  <tabstop>importPathForPRInputText</tabstop>
+  <tabstop>importBrowseForPRButton</tabstop>
+  <tabstop>importKeyUsageEncryptionRadioButton</tabstop>
+  <tabstop>importKeyUsageSignRadioButton</tabstop>
+  <tabstop>importButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="importKeyUsageGroup"/>
-  <buttongroup name="algorithmGroup"/>
   <buttongroup name="importKeyTypeGroup"/>
   <buttongroup name="keySizeGroup"/>
+  <buttongroup name="importKeyUsageGroup"/>
+  <buttongroup name="algorithmGroup"/>
  </buttongroups>
 </ui>

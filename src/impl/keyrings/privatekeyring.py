@@ -133,13 +133,14 @@ class PrivateKeyring:
         elif keyID in self.privateKeyringEncryption.keys():
             print('Ovaj kljuc vec postoji u prstenu za sifrovanje...')
         else:
-            if usage == 'singing' or usage == 's':
+            if usage == 'Singing' or usage == 's':
                 self.privateKeyringSigning[keyID] = newPrivateKey
-            elif usage == 'encryption' or usage == 'e':
+            elif usage == 'Encryption' or usage == 'e':
                 self.privateKeyringEncryption[keyID] = newPrivateKey
             else:
                 print('Navedena neadekvatna upotreba prilikom izvoza!')
                 return None
+        return keyID
 
 
     def generateKeys(self, name, email, algo, sizeOfKeys, password):

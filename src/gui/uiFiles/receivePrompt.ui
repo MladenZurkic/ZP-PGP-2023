@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>ReceiveDialog</class>
+ <widget class="QDialog" name="ReceiveDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -29,7 +29,7 @@ QTextEdit {
    <property name="geometry">
     <rect>
      <x>120</x>
-     <y>150</y>
+     <y>170</y>
      <width>161</width>
      <height>23</height>
     </rect>
@@ -45,7 +45,7 @@ QTextEdit {
    <property name="geometry">
     <rect>
      <x>90</x>
-     <y>80</y>
+     <y>110</y>
      <width>221</width>
      <height>41</height>
     </rect>
@@ -65,9 +65,9 @@ QTextEdit {
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>30</y>
+     <y>10</y>
      <width>401</width>
-     <height>31</height>
+     <height>51</height>
     </rect>
    </property>
    <property name="font">
@@ -87,7 +87,34 @@ QTextEdit {
 }</string>
    </property>
    <property name="text">
-    <string>Enter Password for Private Key:</string>
+    <string>To Decrypt this message
+you need to enter password for Key:</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="receiveKeyIDLabel">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>70</y>
+     <width>401</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {
+	color: white;
+}</string>
+   </property>
+   <property name="text">
+    <string>placeholder</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>

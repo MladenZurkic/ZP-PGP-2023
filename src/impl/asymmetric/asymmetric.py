@@ -84,8 +84,6 @@ def signData(algorithm, privateKey, data, passphrase):
 
     print("SIGNATURE PRILIKOM POTPISA:")
     print(signature)
-    print(hashValue)
-    print(dataBytes)
     return 0, signature
 
 # Works

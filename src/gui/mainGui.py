@@ -1,13 +1,13 @@
 import base64
-import datetime
 import os
 import sys
 import time
 
-from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QDialog
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QDialog, QTableWidgetItem, QPushButton, QHeaderView
 from PyQt5 import QtWidgets
 from src.gui.pyFiles.mainWindow import Ui_MainWindow
 from src.gui.pyFiles.sendPrompt import Ui_Dialog
+from src.gui.pyFiles.receivePrompt import Ui_ReceiveDialog
 from src.impl.user import User
 from src.impl.compression.compression import compress, decompress
 from src.impl.conversion.conversion import decodeFromRadix64, encodeToRadix64
@@ -19,6 +19,20 @@ class SendPrompt(QDialog, Ui_Dialog):
         self.setupUi(self)
         self.buttonBox.accepted.connect(self.buttonOK)
         self.buttonBox.rejected.connect(self.buttonCancel)
+
+    def buttonOK(self):
+        self.accept()
+
+    def buttonCancel(self):
+        self.reject()
+
+class ReceivePrompt(QDialog, Ui_ReceiveDialog):
+    def __init__(self, keyID, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.buttonBox.accepted.connect(self.buttonOK)
+        self.buttonBox.rejected.connect(self.buttonCancel)
+        self.receiveKeyIDLabel.setText(keyID)
 
     def buttonOK(self):
         self.accept()
@@ -71,6 +85,12 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.generateErrorLabel.setStyleSheet("QLabel { color: red; }")
         self.sendErrorLabel.setStyleSheet("QLabel { color: red; }")
+
+        header = self.privateKeyRingTable.horizontalHeader()
+        header.resizeSection(0, 170)
+        header.resizeSection(1, 170)
+        header.resizeSection(4, 100)
+        header.resizeSection(5, 100)
 
         self.user = User()
 
@@ -178,8 +198,10 @@ class Window(QMainWindow, Ui_MainWindow):
             algorithm = "RSA" if (self.generateRSARadioButton.isChecked()) else "DSA+ElGamal"
             keySize = 1024 if (self.generateKeySize1024RadioButton.isChecked()) else 2048
             password = self.generatePasswordInputText.toPlainText()
-            self.user.generateKeys(name, email, algorithm, keySize, password)
+            signingKeyID, encyptionKeyID = self.user.generateKeys(name, email, algorithm, keySize, password)
             self.user.printKeys()
+            self.addRowToPrivateKeyRingTable(signingKeyID, "Signing")
+            self.addRowToPrivateKeyRingTable(encyptionKeyID, "Encryption")
 
     def sendMessage(self):
         if self.checkFields("send") == 0:
@@ -217,7 +239,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 algorithm = "AES" if (self.sendAESRadioButton.isChecked()) else "3DES"
                 encryptedData, encryptedSessionKey, publicKeyID = self.user.encryptData(data, int(publicID), algorithm)
                 operations = "E" + operations
-                data = encryptedData + "~#~" + encryptedSessionKey + "~#~" + publicKeyID
+                data = encryptedData + "~#~" + encryptedSessionKey + "~#~" + publicKeyID + "~#~" + algorithm
 
             # Convert to Radix if selected:
             if self.sendRadixCheckBox.isChecked():
@@ -225,7 +247,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 data = encodeToRadix64(data)
 
             # Save to file:
-            frame = QFileDialog.getSaveFileName(self, 'Save File', 'C:\\' + filename + '.txt', "Txt File (*.txt)")
+            frame = QFileDialog.getSaveFileName(self, 'Save File', 'C:\\Users\\Mladen\\Desktop\\TestZPFajlovi\\' + filename + '.txt', "Txt File (*.txt)")
             if (frame[0] == ""):
                 self.sendErrorLabel.setText("Message not saved.")
             else:
@@ -243,20 +265,29 @@ class Window(QMainWindow, Ui_MainWindow):
             if "R" in operations:
                 data = decodeFromRadix64(data)
             if "E" in operations:
-                encryptedData, encryptedSessionKey, publicKeyID = data.split("~#~")
-                data = self.user.decryptData(encryptedData, encryptedSessionKey)
+
+                encryptedData, encryptedSessionKey, publicKeyID, algorithm = data.split("~#~")
+
+                #Open prompt for password:
+                receivePopup = ReceivePrompt(publicKeyID)
+                if receivePopup.exec_() == QDialog.Accepted:
+                    password = receivePopup.passwordInputText.toPlainText()
+                else:
+                    self.receivedMessageBox.setStyleSheet("color: red;")
+                    self.receivedMessageBox.setText("Password not entered or not correct!")
+                    return -1
+
+                data = self.user.decryptData(encryptedData, encryptedSessionKey, publicKeyID, password, algorithm)
+
             if "C" in operations:
                 data = decompress(base64.b64decode(data))
             if "S" in operations:
-                print("TEST")
 
                 message, timestamp, filename, signature, leadingTwoOctets, publicID, timestamp = data.split("~#~")
-                self.user.publicKeyring.printKeyring()
-
                 publicKey = self.user.publicKeyring.getKey(int(publicID))
-                print("signature:" )
-                print(signature)
+
                 toVerify = message + "~#~" + timestamp + "~#~" + filename
+
                 if self.user.verifySignature(toVerify, signature, publicKey,
                                              self.user.privateKeyring.getKeyForSigning(int(publicID)).usedAlgorithm):
                     self.receivedMessageBox.setText("Message is verified!")
@@ -271,15 +302,88 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.checkFields("import") == 0:
             if self.importKeyTypePublicRadioButton.isChecked():
                 path = self.importPathForPUInputText.toPlainText()
-                self.user.publicKeyring.importKey(path)
+                publicKeyID = self.user.publicKeyring.importKey(path)
+                self.addRowToPublicKeyRingTable(publicKeyID)
+
             else:
                 pathPU = self.importPathForPUInputText.toPlainText()
                 pathPR = self.importPathForPRInputText.toPlainText()
-                self.user.publicKeyring.importKey(pathPU)
-                self.user.privateKeyring.importKey(pathPU, pathPR, 's' if self.importKeyUsageSignRadioButton.isChecked() else 'e')
+                publicKeyID = self.user.publicKeyring.importKey(pathPU)
+                usage = "Signing" if self.importKeyUsageSignRadioButton.isChecked() else "Encryption"
+                privateKeyID = self.user.privateKeyring.importKey(pathPU, pathPR, usage)
 
+                self.addRowToPrivateKeyRingTable(privateKeyID, usage)
+                self.addRowToPublicKeyRingTable(publicKeyID)
         self.user.printKeys()
 
+
+
+    def addRowToPrivateKeyRingTable(self, keyID, usage):
+        rowPosition = self.privateKeyRingTable.rowCount()
+        self.privateKeyRingTable.insertRow(rowPosition)
+
+        if usage == 'Signing' or usage == 's':
+            privateKey = self.user.privateKeyring.getKeyForSigning(keyID)
+        else:
+            privateKey = self.user.privateKeyring.getKeyForEncryption(keyID)
+
+        userID = privateKey.userID
+        algorithm = privateKey.usedAlgorithm
+        self.privateKeyRingTable.setItem(rowPosition, 0, QTableWidgetItem(str(keyID)))
+        self.privateKeyRingTable.setItem(rowPosition, 1, QTableWidgetItem(str(userID)))
+        self.privateKeyRingTable.setItem(rowPosition, 2, QTableWidgetItem(str(usage)))
+        self.privateKeyRingTable.setItem(rowPosition, 3, QTableWidgetItem(str(algorithm)))
+
+        buttonMore = QPushButton("More..")
+        buttonMore.clicked.connect(lambda checked, id=keyID: self.handle_button_click(id))
+        self.privateKeyRingTable.setCellWidget(rowPosition, 4, buttonMore)
+
+        buttonDelete = QPushButton("Delete")
+        buttonDelete.setStyleSheet("QPushButton { background-color: #b0a996; font: bold; }")
+        buttonDelete.clicked.connect(lambda checked, id=keyID: self.deletePrivateKey(id))
+        self.privateKeyRingTable.setCellWidget(rowPosition, 5, buttonDelete)
+
+
+    def addRowToPublicKeyRingTable(self, keyID):
+        rowPosition = self.publicKeyRingTable.rowCount()
+        self.publicKeyRingTable.insertRow(rowPosition)
+
+        publicKey = self.user.publicKeyring.getKey(keyID)
+        userID = publicKey.userID
+        algorithm = publicKey.usedAlgorithm
+        self.publicKeyRingTable.setItem(rowPosition, 0, QTableWidgetItem(str(keyID)))
+        self.publicKeyRingTable.setItem(rowPosition, 1, QTableWidgetItem(str(userID)))
+        self.publicKeyRingTable.setItem(rowPosition, 2, QTableWidgetItem(str(algorithm)))
+
+        buttonMore = QPushButton("More..")
+        buttonMore.clicked.connect(lambda checked, id=keyID: self.handle_button_click(id))
+        self.publicKeyRingTable.setCellWidget(rowPosition, 3, buttonMore)
+
+        buttonDelete = QPushButton("Delete")
+        buttonDelete.setStyleSheet("QPushButton { background-color: #b0a996; font: bold; }")
+        buttonDelete.clicked.connect(lambda checked, id=keyID: self.deletePublicKey(id))
+        self.publicKeyRingTable.setCellWidget(rowPosition, 4, buttonDelete)
+
+
+    def handle_button_click(self, keyID):
+        print("Button clicked, Row ", keyID)
+
+
+    def deletePublicKey(self, keyID):
+        rowCount = self.publicKeyRingTable.rowCount()
+        for row in range(rowCount):
+            if self.publicKeyRingTable.item(row, 0).text() == str(keyID):
+                self.publicKeyRingTable.removeRow(row)
+                #IMPLEMENTIRATI DELETE IZ PUBLIC KEYRINGA
+                break
+
+    def deletePrivateKey(self, keyID):
+        rowCount = self.privateKeyRingTable.rowCount()
+        for row in range(rowCount):
+            if self.privateKeyRingTable.item(row, 0).text() == str(keyID):
+                self.privateKeyRingTable.removeRow(row)
+                #IMPLEMENTIRATI DELETE IZ PRIVATE KEYRINGA
+                break
 
     def signCheckBoxClicked(self):
         if self.sendSignCheckBox.isChecked():
@@ -310,7 +414,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.send3DESRadioButton.setStyleSheet("QRadioButton { color: #a3a3a3; }")
 
     def receiveBrowseClicked(self):
-        frame = QFileDialog.getOpenFileName(self, 'Open Message to Read', 'C:\\Users\\Mladen\\Desktop\\', "All files (*.*)")
+        frame = QFileDialog.getOpenFileName(self, 'Open Message to Read', 'C:\\Users\\Mladen\\Desktop\\TestZPFajlovi\\', "All files (*.*)")
         self.receiveMessagePathInput.setText(frame[0])
 
     def importBrowsePUClicked(self):
