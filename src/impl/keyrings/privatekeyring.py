@@ -76,9 +76,9 @@ class PrivateKeyring:
 
             outputDataPU = keyToExport.userID + "~#~" + keyToExport.usedAlgorithm + "~#~" + publicKeyInPEM
             if not PATH:
-                filenamePU = f'{PEM_FOLDER}PU_{keyToExport.keyID}.pem'
+                filenamePU = f'{PEM_FOLDER}\\PU_{keyToExport.keyID}.pem'
             else:
-                filenamePU = f'{PATH}PU_{keyToExport.keyID}.pem'
+                filenamePU = f'{PATH}\\PU_{keyToExport.keyID}.pem'
             with open(filenamePU, 'w') as file:
                 file.write(outputDataPU)
 
@@ -96,9 +96,9 @@ class PrivateKeyring:
 
             outputDataPR = keyToExport.userID + "~#~" + usage + "~#~" + keyToExport.usedAlgorithm + "~#~" + str(keyToExport.length) + "~#~" + privateKeyInPEM
             if not PATH:
-                filenamePR = f'{PEM_FOLDER}PR_{keyToExport.keyID}.pem'
+                filenamePR = f'{PEM_FOLDER}\\PR_{keyToExport.keyID}.pem'
             else:
-                filenamePR = f'{PATH}PR_{keyToExport.keyID}.pem'
+                filenamePR = f'{PATH}\\PR_{keyToExport.keyID}.pem'
             with open(filenamePR, 'w') as file:
                 file.write(outputDataPR)
 
@@ -134,7 +134,9 @@ class PrivateKeyring:
             if usedAlgorithm == "ElGamal":
                 keyInPEM = data.split('~#~')[4]
                 dat = keyInPEM.replace("-----BEGIN PRIVATE KEY-----\n", "").replace("\n-----END PRIVATE KEY-----", "")
+
                 encPrivateKey = bytes(dat[2:-1], 'utf-8')
+                encPrivateKey = encPrivateKey.decode("unicode_escape").encode("raw_unicode_escape")
             else:
                 encPrivateKey = Crypto.IO.PEM.decode(data.split('~#~')[4])
 
@@ -149,8 +151,10 @@ class PrivateKeyring:
 
         if keyID in self.privateKeyringSigning.keys():
             print('Ovaj kljuc vec postoji u prstenu za potpisivanje...')
+            return -1, None, None
         elif keyID in self.privateKeyringEncryption.keys():
             print('Ovaj kljuc vec postoji u prstenu za sifrovanje...')
+            return -1, None, None
         else:
             if usage == 'Singing' or usage == 's':
                 self.privateKeyringSigning[keyID] = newPrivateKey
@@ -158,8 +162,10 @@ class PrivateKeyring:
                 self.privateKeyringEncryption[keyID] = newPrivateKey
             else:
                 print('Navedena neadekvatna upotreba prilikom izvoza!')
-                return None
-        return keyID
+                return -2, None, None
+
+        usage = "Encryption" if (usage == "e" or usage == "Encryption") else "Signing"
+        return 0, keyID, usage
 
 
     def generateKeys(self, name, email, algo, sizeOfKeys, password):
@@ -270,13 +276,13 @@ class PrivateKeyring:
 
     # Removes key from PrivateKeyring
     def removeKey(self, keyID):
-        if keyID not in self.privateKeyringEncryption.keys() or self.privateKeyringSigning.keys():
-            print('Nije moguce obrisati privatni kljuc s vrednoscu ' + keyID)
+        if keyID not in self.privateKeyringEncryption.keys() and keyID not in self.privateKeyringSigning.keys():
+            print('Nije moguce obrisati privatni kljuc s vrednoscu ' + str(keyID))
         else:
             if keyID in self.privateKeyringEncryption.keys():
                 del self.privateKeyringEncryption[keyID]
             if keyID in self.privateKeyringSigning.keys():
-                del self.privateKeyringSigning
+                del self.privateKeyringSigning[keyID]
 
 
     # Helper function used to print public keyring

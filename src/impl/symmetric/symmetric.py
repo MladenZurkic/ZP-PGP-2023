@@ -46,19 +46,26 @@ class SymmetricEncryptionDecryption:
         privateKeyringValue = self.privateKeyring.getKeyForEncryption(keyID)
         if not privateKeyringValue:
             print('Kljuc sa ID: ' + str(keyID) + ' ne postoji...')
-            # return 1, None
+            return -1, None
 
         algorithm = privateKeyringValue.usedAlgorithm
 
-        sessionKey = asymmetric.decryptData(
+        returnCode, sessionKey = asymmetric.decryptData(
             algorithm, privateKeyringValue, encryptedSessionKey, password
-        )[1]
+        )
 
-        cipher = self.type.new(sessionKey, self.type.MODE_ECB)
-        encryptedData = b64decode(encryptedData)
-        decryptedData = cipher.decrypt(encryptedData)
-        unpaddedData = self.unpadData(decryptedData)
-        return unpaddedData.decode('utf-8')
+        if returnCode == -1:
+            return -1, None
+        if returnCode == -2:
+            return -2, None
+        try:
+            cipher = self.type.new(sessionKey, self.type.MODE_ECB)
+            encryptedData = b64decode(encryptedData)
+            decryptedData = cipher.decrypt(encryptedData)
+            unpaddedData = self.unpadData(decryptedData)
+        except:
+            return -2, None
+        return 0, unpaddedData.decode('utf-8')
 
 
     def padData(self, data):

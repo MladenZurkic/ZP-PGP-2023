@@ -19,9 +19,10 @@ class User:
     def generateKeys(self, name, email, algorithm, sizeOfKeys, password):
         signingKeyID, encyptionKeyID = self.privateKeyring.generateKeys(name, email, algorithm, sizeOfKeys, password)
 
-        self.publicKeyring.insertKey(self.privateKeyring.getKeyForSigning(signingKeyID).publicKey, name, usedAlgorithm=algorithm)
-        self.publicKeyring.insertKey(self.privateKeyring.getKeyForEncryption(encyptionKeyID).publicKey, name, usedAlgorithm=algorithm)
-
+        # # Potrebno je otkomentarisati da bi se kljucevi ubacili u public keyring prilikom generisanja
+        # # Koristiti samo za testiranje
+        # self.publicKeyring.insertKey(self.privateKeyring.getKeyForSigning(signingKeyID).publicKey, name, usedAlgorithm=algorithm)
+        # self.publicKeyring.insertKey(self.privateKeyring.getKeyForEncryption(encyptionKeyID).publicKey, name, usedAlgorithm=algorithm)
 
         print("Keys Generated! The IDs of generated keys are: ")
         print("Key for Signing: " + str(signingKeyID))
@@ -50,10 +51,11 @@ class User:
         returnCode = asymmetric.verifySignedData(algorithm, data, signature, publicKey)
 
         #Fix return values.
-        if returnCode:
+        if returnCode < 0:
             print("Signature is NOT good!")
-            return
+            return -1
         print("Signature is GOOD!")
+        return 0
 
 
     def encryptData(self, data, publicKeyID, algorithm):
@@ -70,7 +72,11 @@ class User:
     def decryptData(self, encodedData, encryptedSessionKeyStr, publicKeyIDStr, password, algorithm):
         encryptedSessionKey = binascii.a2b_base64(encryptedSessionKeyStr)
         decryption = SymmetricEncryptionDecryption(algorithm, self.publicKeyring, self.privateKeyring)
-        return decryption.decrypt(int(publicKeyIDStr), password, encodedData, encryptedSessionKey)
+        try:
+            publicKeyInt = int(publicKeyIDStr)
+        except:
+            return -2, None
+        return decryption.decrypt(publicKeyInt, password, encodedData, encryptedSessionKey)
 
 if __name__ == '__main__':
 
@@ -78,7 +84,7 @@ if __name__ == '__main__':
     user1 = User()
     # def generateKeys(self, name, email, algorithm, sizeOfKeys, password):
     user1.generateKeys("Filip", "filip@gmail.com", "ElGamal", 1024, "sifra")
-    user1.printKeys()
+    #user1.printKeys()
 
     data = "ZP Projekat 2023"
 
@@ -122,11 +128,11 @@ if __name__ == '__main__':
     # # ****** IMPORT EXPORT: ******
     key = list(user1.privateKeyring.privateKeyringEncryption)
     privateKey = user1.privateKeyring.getKeyForEncryption(key[0])
-    # publicKey = privateKey.publicKey
+    publicKey = privateKey.publicKey
 
 
     # Ovo radi
-    user1.privateKeyring.exportKey(privateKey.keyID, "e", "C:/Users/Filip/Desktop/ZP Projekat/pem_files/")
+    # user1.privateKeyring.exportKey(privateKey.keyID, "e", "C:\\Users\\Mladen\\Desktop\\TestZPFajlovi\\")
 
     # Ovo radi
     # user1.publicKeyring.importKey("C:/Users/Filip/Desktop/ZP Projekat/pem_files/PU_14487548930483000366.pem")
@@ -134,11 +140,38 @@ if __name__ == '__main__':
 
     # Ovo radi
     user1.privateKeyring.importKey(
-        "C:/Users/Filip/Desktop/ZP Projekat/pem_files/PU_8789233877840794670.pem",
-        "C:/Users/Filip/Desktop/ZP Projekat/pem_files/PR_8789233877840794670.pem"
+        "C:\\Users\\Mladen\\Desktop\\TestZPFajlovi\\PU_16295181946248991790.pem",
+        "C:\\Users\\Mladen\\Desktop\\TestZPFajlovi\\PR_16295181946248991790.pem"
     )
-    user1.privateKeyring.printKeyring("ENCRYPTION")
+    # user1.privateKeyring.printKeyring("ENCRYPTION")
 
-    encprivkey = user1.privateKeyring.getKeyForEncryption(8789233877840794670)
-    decryptPrivateKey(encprivkey, "sifra", "e")
+    user1.publicKeyring.importKey("C:\\Users\\Mladen\\Desktop\\TestZPFajlovi\\PU_16295181946248991790.pem")
 
+
+    publicKeyID = user1.publicKeyring.getKeyID(publicKey)
+    encprivkey = user1.privateKeyring.getKeyForEncryption(publicKeyID)
+
+    user1.printKeys()
+    returnCode, key = decryptPrivateKey(encprivkey, "sifra", "e")
+
+    print("KEY")
+    print(key)
+
+    encryptedData, encryptedSessionKeyStr, publicKeyIDStr = user1.encryptData("ZP Projekat 2023aa", 16295181946248991790, "AES")
+
+    print("ENCRYPTED DATA")
+    print(encryptedData)
+
+    decryptedData = user1.decryptData(encryptedData, encryptedSessionKeyStr, publicKeyIDStr, "sifra", "AES")
+
+    print("DECRYPTED DATA")
+    print(decryptedData)
+
+
+    user1.privateKeyring.removeKey(16295181946248991790)
+    user1.privateKeyring.removeKey(16295181946248991791)
+    user1.privateKeyring.removeKey(16295181946248991792)
+    user1.privateKeyring.removeKey(16295181946248991793)
+    user1.privateKeyring.removeKey(publicKeyID)
+
+    user1.printKeys()

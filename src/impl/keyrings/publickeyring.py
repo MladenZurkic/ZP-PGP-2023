@@ -91,7 +91,7 @@ class PublicKeyring:
 
             if keyID in self.publicKeyring.keys():
                 print('Ovaj kljuc vec postoji...')
-                return 1
+                return -1
             else:
                 newPublicKey = PublicKeyringValues(
                     keyID=keyID,

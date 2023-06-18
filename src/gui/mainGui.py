@@ -65,11 +65,12 @@ class MoreInfoPublic(QDialog, Ui_PublicKeyInfoDialog):
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
             )
+            self.publicKeyTextInput.setText(publicKeyPEM.decode("utf-8"))
         else:
-            publicKeyBytes = elGamalKeyToBytes(publicKey.publicKey)
-            publicKeyPEM = f"-----BEGIN PUBLIC KEY-----\n{publicKeyBytes}\n-----END PUBLIC KEY-----"
+            #publicKeyBytes = elGamalKeyToBytes(publicKey.publicKey)
+            publicKeyPEM = f"-----BEGIN PUBLIC KEY-----\n{publicKey.publicKey}\n-----END PUBLIC KEY-----"
+            self.publicKeyTextInput.setText(publicKeyPEM)
 
-        self.publicKeyTextInput.setText(publicKeyPEM.decode("utf-8"))
         self.exitButton.clicked.connect(self.buttonExit)
 
     def buttonExit(self):
@@ -283,19 +284,18 @@ class Window(QMainWindow, Ui_MainWindow):
                     return -1
                 return 0
             case "receive":
-                self.receivedMessageBox.setStyleSheet("color: red;")
+                self.receiveErrorLabel.setStyleSheet("color: red;")
                 if self.receiveMessagePathInput.toPlainText() == "":
-                    self.receivedMessageBox.setText("Message Path is empty!")
+                    self.receiveErrorLabel.setText("Message Path is empty!")
                     return -1
 
                 path = self.receiveMessagePathInput.toPlainText()
 
                 if not os.path.exists(path):
-                    self.receivedMessageBox.setText("Message Path is invalid!")
+                    self.receiveErrorLabel.setText("Message Path is invalid!")
                     return -1
 
-                self.receivedMessageBox.setStyleSheet("color: black;")
-                self.receivedMessageBox.setText("")
+                self.receiveErrorLabel.setText("")
                 return 0
             case "import":
                 if self.importKeyTypePublicRadioButton.isChecked():
@@ -362,7 +362,16 @@ class Window(QMainWindow, Ui_MainWindow):
                     return -1
 
                 privateID = self.sendSignPrivateIDInput.toPlainText()
-                privateKeyRingValue = self.user.privateKeyring.getKeyForSigning(int(privateID))
+                try:
+                    privateIDInt = int(privateID)
+                except:
+                    self.sendErrorLabel.setText("Private ID for Signing is not valid!")
+                    return -1
+
+                privateKeyRingValue = self.user.privateKeyring.getKeyForSigning(privateIDInt)
+                if privateKeyRingValue is None:
+                    self.sendErrorLabel.setText("Private Key needed for Signing not found!")
+                    return -1
 
                 #Check if password is correct:
                 returnCode, decryptedPrivateKey = asymmetric.decryptPrivateKey(privateKeyRingValue, password, "Signing")
@@ -406,12 +415,19 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def receiveMessage(self):
+        self.receiveErrorLabel.setText("")
+        self.receivedMessageBox.setText("")
+        self.receiveErrorLabel.setStyleSheet("QLabel { color: red; }")
         if self.checkFields("receive") == 0:
             with open(self.receiveMessagePathInput.toPlainText(), 'r') as f:
                 data = f.read()
             operations, data = data.split("~#~", 1)
             if "R" in operations:
-                data = decodeFromRadix64(data)
+                try:
+                    data = decodeFromRadix64(data)
+                except:
+                    self.receiveErrorLabel.setText("Message is not in Radix64 format!")
+                    return -1
             if "E" in operations:
 
                 encryptedData, encryptedSessionKey, publicKeyID, algorithm = data.split("~#~")
@@ -421,47 +437,78 @@ class Window(QMainWindow, Ui_MainWindow):
                 if receivePopup.exec_() == QDialog.Accepted:
                     password = receivePopup.passwordInputText.toPlainText()
                 else:
-                    self.receivedMessageBox.setStyleSheet("color: red;")
-                    self.receivedMessageBox.setText("Password not entered or not correct!")
+                    self.receiveErrorLabel.setText("Password not entered or not correct!")
                     return -1
 
-                data = self.user.decryptData(encryptedData, encryptedSessionKey, publicKeyID, password, algorithm)
+                returnCode, data = self.user.decryptData(encryptedData, encryptedSessionKey, publicKeyID, password, algorithm)
+                if returnCode == -1:
+                    self.receiveErrorLabel.setText("Password not entered or not correct!")
+                    return -1
+                if returnCode == -2:
+                    self.receiveErrorLabel.setText("Encrypted data corrupted!")
+                    return -1
 
             if "C" in operations:
-                data = decompress(base64.b64decode(data))
+                try:
+                    data = decompress(base64.b64decode(data))
+                except:
+                    self.receiveErrorLabel.setText("Message is not compressed properly or is corrupted!")
+                    return -1
             if "S" in operations:
 
                 message, timestamp, filename, signature, leadingTwoOctets, publicID, timestamp = data.split("~#~")
-                publicKey = self.user.publicKeyring.getKey(int(publicID))
+                try:
+                    publicIDInt = int(publicID)
+                except:
+                    self.receiveErrorLabel.setText("Public Key ID is corrupted!")
+                    return -1
+
+                publicKey = self.user.publicKeyring.getKey(publicIDInt)
+                if publicKey is None:
+                    self.receiveErrorLabel.setText("Public Key needed for verification not found!")
+                    return -1;
 
                 toVerify = message + "~#~" + timestamp + "~#~" + filename
-
-                if self.user.verifySignature(toVerify, signature, publicKey,
-                                             self.user.privateKeyring.getKeyForSigning(int(publicID)).usedAlgorithm):
-                    self.receivedMessageBox.setText("Message is verified!")
-                else:
-                    self.receivedMessageBox.setStyleSheet("color: red;")
-                    self.receivedMessageBox.setText("Message is not verified!")
+                returnCode = self.user.verifySignature(toVerify, signature, publicKey,
+                                             self.user.privateKeyring.getKeyForSigning(int(publicID)).usedAlgorithm)
+                if returnCode < 0:
+                    self.receiveErrorLabel.setText("Message is not verified! Data or Signature are corrupted!")
+                    return -1
                 data = message + "~#~" + timestamp + "~#~" + filename
             message, timestamp, filename = data.split("~#~")
             self.receivedMessageBox.setText(message)
 
     def importKeys(self):
+        self.importErrorLabel.setText("")
+        self.importErrorLabel.setStyleSheet("QLabel { color: red; }")
         if self.checkFields("import") == 0:
+
             if self.importKeyTypePublicRadioButton.isChecked():
                 path = self.importPathForPUInputText.toPlainText()
                 publicKeyID = self.user.publicKeyring.importKey(path)
                 self.addRowToPublicKeyRingTable(publicKeyID)
+                self.importErrorLabel.setStyleSheet("QLabel { color: lightgreen; }")
+                self.importErrorLabel.setText("Key imported successfully!")
 
             else:
                 pathPU = self.importPathForPUInputText.toPlainText()
                 pathPR = self.importPathForPRInputText.toPlainText()
                 publicKeyID = self.user.publicKeyring.importKey(pathPU)
-                usage = "Signing" if self.importKeyUsageSignRadioButton.isChecked() else "Encryption"
-                privateKeyID = self.user.privateKeyring.importKey(pathPU, pathPR)
+                # usage = "Signing" if self.importKeyUsageSignRadioButton.isChecked() else "Encryption"
+                returnCode, privateKeyID, usage = self.user.privateKeyring.importKey(pathPU, pathPR)
+                if returnCode == -1:
+                    self.importErrorLabel.setText("Error while importing keys: Key already exists!")
+                    self.importErrorLabel.setStyleSheet("QLabel { color: red; }")
+                    return -1
+                elif returnCode == -2:
+                    self.importErrorLabel.setText("Error while importing keys!")
+                    self.importErrorLabel.setStyleSheet("QLabel { color: red; }")
+                    return -2
 
                 self.addRowToPrivateKeyRingTable(privateKeyID, usage)
                 self.addRowToPublicKeyRingTable(publicKeyID)
+                self.importErrorLabel.setStyleSheet("QLabel { color: lightgreen; }")
+                self.importErrorLabel.setText("Keys imported successfully!")
         self.user.printKeys()
 
 
@@ -493,6 +540,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def moreInformationPrivate(self, keyID, usage):
+        self.privateKeyErrorLabel.setText("")
         # Open prompt for password:
         privateKeyPasswordPrompt = MoreInfoPrivatePrompt(keyID)
         if privateKeyPasswordPrompt.exec_() == QDialog.Accepted:
@@ -507,15 +555,13 @@ class Window(QMainWindow, Ui_MainWindow):
 
         returnCode, decryptedPrivateKey = asymmetric.decryptPrivateKey(privateKey, password, usage)
         if returnCode < 0:
+            self.privateKeyErrorLabel.setText("Password not entered or not correct!")
+            self.privateKeyErrorLabel.setStyleSheet("QLabel { color: red; }")
             return -1
 
         #Očekuje da je privatekey objekat klase PrivateKeyValue
         moreInfoPrivatePrompt = MoreInfoPrivate(privateKey, password, usage, self.user)
         moreInfoPrivatePrompt.exec_()
-
-
-
-
 
     def addRowToPublicKeyRingTable(self, keyID):
         rowPosition = self.publicKeyRingTable.rowCount()
@@ -543,21 +589,33 @@ class Window(QMainWindow, Ui_MainWindow):
         moreInfoPublicPrompt = MoreInfoPublic(self.user, keyID)
         moreInfoPublicPrompt.exec_()
 
+
     def deletePublicKey(self, keyID):
         rowCount = self.publicKeyRingTable.rowCount()
+        self.publicKeyErrorLabel.setText("")
         for row in range(rowCount):
             if self.publicKeyRingTable.item(row, 0).text() == str(keyID):
                 self.publicKeyRingTable.removeRow(row)
                 self.user.publicKeyring.removeKey(keyID)
+                self.user.printKeys()
+                self.publicKeyErrorLabel.setText("Delete Successful!")
+                self.publicKeyErrorLabel.setStyleSheet("QLabel { color: lightgreen; }")
                 break
+        self.user.printKeys()
+
 
     def deletePrivateKey(self, keyID):
         rowCount = self.privateKeyRingTable.rowCount()
+        self.privateKeyErrorLabel.setText("")
         for row in range(rowCount):
             if self.privateKeyRingTable.item(row, 0).text() == str(keyID):
                 self.privateKeyRingTable.removeRow(row)
                 self.user.privateKeyring.removeKey(keyID)
+                self.user.printKeys()
+                self.privateKeyErrorLabel.setText("Delete Successful!")
+                self.privateKeyErrorLabel.setStyleSheet("QLabel { color: lightgreen; }")
                 break
+        self.user.printKeys()
 
     def signCheckBoxClicked(self):
         if self.sendSignCheckBox.isChecked():

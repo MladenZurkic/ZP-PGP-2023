@@ -109,7 +109,7 @@ def verifySignedData(algorithm, data, signature, publicKey):
             )
         except:
             traceback.print_exc()
-            return 1
+            return -1
     else:
         try:
             publicKeyObject.verify(
@@ -118,7 +118,7 @@ def verifySignedData(algorithm, data, signature, publicKey):
                 hashes.SHA1()
             )
         except:
-            return 1
+            return -1
     return 0
 
 
@@ -166,7 +166,7 @@ def decryptPrivateKey(privateKey, passphrase, usage):
             if usage == "Signing" or usage == "s":
                 decryptedPrivateKey = serialization.load_der_private_key(decryptedPrivateKeyBytes, None)
             else:
-                decryptedPrivateKey = elGamalBase64ToKey(decryptedPrivateKeyBytes)
+                decryptedPrivateKey = elGamalBytesToKey(decryptedPrivateKeyBytes)
     except ValueError as err:
         print(err)
         return -1, None
@@ -191,7 +191,7 @@ def decryptData(algorithm, privateKeyValue, data, passphrase):
     except ValueError as err:
         print("testing ValueError, got to except part")
         print(err)
-        return 1, None
+        return -1, None
 
 
     if(algorithm.upper() == "RSA"):
@@ -205,7 +205,7 @@ def decryptData(algorithm, privateKeyValue, data, passphrase):
                 )
             )
         except:
-            return 2, None
+            return -2, None
     else:
         plaintext = elGamalDecrypt(data, decryptedPrivateKey)
 
@@ -248,5 +248,5 @@ if __name__ == '__main__':
         if not returnCode:
             print(returnCode)
             print(decrypted)
-            print("starting data: ",end="")
+            print("starting data: ", end="")
             print(pickle.loads(decrypted))
