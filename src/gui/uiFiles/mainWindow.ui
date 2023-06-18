@@ -1491,85 +1491,6 @@ QTextEdit {
        </font>
       </property>
      </widget>
-     <widget class="QRadioButton" name="importKeyUsageEncryptionRadioButton">
-      <property name="geometry">
-       <rect>
-        <x>200</x>
-        <y>280</y>
-        <width>141</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>14</pointsize>
-        <weight>50</weight>
-        <italic>false</italic>
-        <bold>false</bold>
-        <underline>false</underline>
-        <kerning>true</kerning>
-       </font>
-      </property>
-      <property name="text">
-       <string>Encryption</string>
-      </property>
-      <attribute name="buttonGroup">
-       <string notr="true">importKeyUsageGroup</string>
-      </attribute>
-     </widget>
-     <widget class="QRadioButton" name="importKeyUsageSignRadioButton">
-      <property name="geometry">
-       <rect>
-        <x>350</x>
-        <y>280</y>
-        <width>91</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>14</pointsize>
-        <weight>50</weight>
-        <italic>false</italic>
-        <bold>false</bold>
-        <underline>false</underline>
-        <kerning>true</kerning>
-       </font>
-      </property>
-      <property name="text">
-       <string>Sign</string>
-      </property>
-      <attribute name="buttonGroup">
-       <string notr="true">importKeyUsageGroup</string>
-      </attribute>
-     </widget>
-     <widget class="QLabel" name="importKeyUsageLabel">
-      <property name="geometry">
-       <rect>
-        <x>30</x>
-        <y>280</y>
-        <width>161</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>Arial</family>
-        <pointsize>14</pointsize>
-        <weight>50</weight>
-        <italic>false</italic>
-        <bold>false</bold>
-        <underline>false</underline>
-        <kerning>true</kerning>
-       </font>
-      </property>
-      <property name="text">
-       <string>Key Usage:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
      <widget class="QPushButton" name="importButton">
       <property name="geometry">
        <rect>
@@ -1726,16 +1647,14 @@ QTextEdit {
   <tabstop>importBrowseForPUButton</tabstop>
   <tabstop>importPathForPRInputText</tabstop>
   <tabstop>importBrowseForPRButton</tabstop>
-  <tabstop>importKeyUsageEncryptionRadioButton</tabstop>
-  <tabstop>importKeyUsageSignRadioButton</tabstop>
   <tabstop>importButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>
  <buttongroups>
+  <buttongroup name="importKeyUsageGroup"/>
   <buttongroup name="importKeyTypeGroup"/>
   <buttongroup name="keySizeGroup"/>
-  <buttongroup name="importKeyUsageGroup"/>
   <buttongroup name="algorithmGroup"/>
  </buttongroups>
 </ui>

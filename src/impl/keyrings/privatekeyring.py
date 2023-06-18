@@ -138,7 +138,8 @@ class PrivateKeyring:
                 encPrivateKey = bytes(dat[2:-1], 'utf-8')
                 encPrivateKey = encPrivateKey.decode("unicode_escape").encode("raw_unicode_escape")
             else:
-                encPrivateKey = Crypto.IO.PEM.decode(data.split('~#~')[4])
+                # data = data.replace("-----BEGIN PRIVATE KEY-----\n", "").replace("\n-----END PRIVATE KEY-----", "")
+                encPrivateKey = Crypto.IO.PEM.decode(data.split('~#~')[4])[0]
 
         newPrivateKey = PrivateKeyringValues(
             keyID=keyID,
@@ -156,7 +157,7 @@ class PrivateKeyring:
             print('Ovaj kljuc vec postoji u prstenu za sifrovanje...')
             return -1, None, None
         else:
-            if usage == 'Singing' or usage == 's':
+            if usage == 'Signing' or usage == 's':
                 self.privateKeyringSigning[keyID] = newPrivateKey
             elif usage == 'Encryption' or usage == 'e':
                 self.privateKeyringEncryption[keyID] = newPrivateKey

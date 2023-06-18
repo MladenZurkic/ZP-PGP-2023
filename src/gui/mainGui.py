@@ -100,7 +100,7 @@ class ExportPathPrompt(QDialog, Ui_ExportPathDialog):
         self.exportBrowsePathButton.clicked.connect(self.pathBrowseClicked)
 
     def pathBrowseClicked(self):
-        frame = QFileDialog.getExistingDirectory(None, 'Select Folder for Exporting:', 'C:\\Users\\Mladen\\Desktop\\TestZPFajlovi\\', QtWidgets.QFileDialog.ShowDirsOnly)
+        frame = QFileDialog.getExistingDirectory(None, 'Select Folder for Exporting:', 'C:\\', QtWidgets.QFileDialog.ShowDirsOnly)
         self.pathInputText.setText(frame)
 
     def buttonOK(self):
@@ -382,7 +382,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
                 signature = self.user.signData(data, int(privateID), password)
                 operations = "S" + operations
-                data = data + "~#~" + signature + "~#~" + "LEADING TWO OCTETS?" + "~#~" + privateID + "~#~" + str(timestamp)
+                data = data + "~#~" + signature + "~#~" + signature[0:15] + "~#~" + privateID + "~#~" + str(timestamp)
 
             # Compress data if selected:
             if self.sendCompressCheckBox.isChecked():
@@ -404,7 +404,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 data = encodeToRadix64(data)
 
             # Save to file:
-            frame = QFileDialog.getSaveFileName(self, 'Save File', 'C:\\Users\\Mladen\\Desktop\\TestZPFajlovi\\' + filename + '.txt', "Txt File (*.txt)")
+            frame = QFileDialog.getSaveFileName(self, 'Save File', 'C:\\' + filename + '.txt', "Txt File (*.txt)")
             if (frame[0] == ""):
                 self.sendErrorLabel.setText("Message not saved.")
             else:
@@ -646,15 +646,15 @@ class Window(QMainWindow, Ui_MainWindow):
             self.send3DESRadioButton.setStyleSheet("QRadioButton { color: #a3a3a3; }")
 
     def receiveBrowseClicked(self):
-        frame = QFileDialog.getOpenFileName(self, 'Open Message to Read', 'C:\\Users\\Mladen\\Desktop\\TestZPFajlovi\\', "All files (*.*)")
+        frame = QFileDialog.getOpenFileName(self, 'Open Message to Read', 'C:\\', "All files (*.*)")
         self.receiveMessagePathInput.setText(frame[0])
 
     def importBrowsePUClicked(self):
-        frame = QFileDialog.getOpenFileName(self, 'Open Public Key PEM File', 'C:\\Users\\Mladen\\Desktop\\', "PEM Files (*.pem)")
+        frame = QFileDialog.getOpenFileName(self, 'Open Public Key PEM File', 'C:\\', "PEM Files (*.pem)")
         self.importPathForPUInputText.setText(frame[0])
 
     def importBrowsePRClicked(self):
-        frame = QFileDialog.getOpenFileName(self, 'Open Private Key PEM File', 'C:\\Users\\Mladen\\Desktop\\', "PEM Files (*.pem)")
+        frame = QFileDialog.getOpenFileName(self, 'Open Private Key PEM File', 'C:\\', "PEM Files (*.pem)")
         self.importPathForPRInputText.setText(frame[0])
 
     def importKeyTypePrivateClicked(self):
